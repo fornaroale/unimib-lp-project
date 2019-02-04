@@ -15,5 +15,6 @@
 ;controllo che non esista già una classe persona
 (defun def-class (nomeClasse superClassi campi)
  ; (print nomeClasse)
-  (cond ((not (get-class-spec nomeClasse)) (add-class-spec nomeClasse *classes-specs*))
+  (cond ((not (get-class-spec nomeClasse)) (add-class-spec nomeClasse campi))
         (T (print "errore, classe gia presente"))))
+
