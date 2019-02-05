@@ -15,10 +15,16 @@
 ;definizione del metodo defun-class
 ;come prima cosa deve creare un link sulla hashtable basandomi sul nomClasse
 ;controllo che non esista già una classe persona
-(defun def-class (nomeClasse superClassi campi)
+(defun def-class (nomeClasse superClassi &rest campi)
   ;(print nomeClasse)
   (cond ((not (get-class-spec nomeClasse)) (add-class-spec nomeClasse campi))
-        (T (print "errore, classe gia presente"))))
+        (T (print "errore, classe gia presente")))
+  (cond (( )
+  )
+
+
+
+)
 
 
 ; Funzione new: 
