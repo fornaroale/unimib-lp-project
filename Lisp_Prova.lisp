@@ -20,10 +20,10 @@
          (print "errore, classe gia presente"))         
         (T (progn
 			(add-class-spec class-name
-				;(list class-name parents slot-value)
-				(list class-name parents 
-					(fondi-attributi parents slot-value)
-				)
+				(list class-name parents slot-value)
+				;(list class-name parents 
+				;	(fondi-attributi parents slot-value)
+				;)
 		)
 		
 		class-name;
@@ -44,11 +44,9 @@
   (cond ((get-class-spec class-name)  ; verifico esistenza classe
     ; copio attributi classe (e parenti) in istanza e rimpiazzo valori
     ; default con valori istanza:
-    (list 'oolinst (checkSlot (get-class-spec class-name) slot 0))
-    ;(list 'oolinst class-name (get-class-spec class-name))
-    )  ; ritorno istanza
-    (T (print "Errore: classe inesistente!")))
-;	(let ((contArgomenti 0))
+    (setq class-specs (copy-tree (get-class-spec class-name)))
+    (list 'oolinst (checkSlot class-specs slot 0))
+  )(T (print "Errore: classe inesistente!")))
 )
 
 
@@ -58,15 +56,17 @@
 ; Per ogni slot-name in slot, scorro instanceList, e se lo trovo, sostituisco
 ; lo slot-value (posizione successiva ad esso) nella lista instanceList
 (defun checkSlot (instanceList slot slotCount)
-  (cond ((< slotCount (length slot)
+  (cond ((< slotCount (length slot))
     ; lista slot: in pos. slotCount ho il nome dello slot, in pos.
     ; slotCount+1 ho il relativo valore
     (setInstVal (nth 2 instanceList) 
                 (nth slotCount slot) 
                 (nth (+ 1 slotCount) slot)
-                2) ; devo partire dalla pos. 2
+                0)
     ; proseguo con 'attributo' successivo
-    (checkSlot instanceList slot (+ 2 slotCount))))))
+    (checkSlot instanceList slot (+ 2 slotCount))))
+  instanceList
+)
 
 
 ; Funzione setInstVal: sostituisce il val. default con val. istanza
@@ -75,7 +75,8 @@
     ; sostituisco slot-value con valore nuovo
     (setf (nth (+ 1 contSlotInstance) instanceList) slot-value)
     ; altrimenti proseguo nella ricerca (ammesso che cont < length)
-    (T (cond ((< contSlotInstance (length instanceList))
+    )(t (cond ((< contSlotInstance (length instanceList))
       (setInstVal instanceList slot-name slot-value (+ 2 contSlotInstance))
        )
-)))))
+    );(t (print "Errore: uno degli attributi specificati e' inesistente!"))
+)))
