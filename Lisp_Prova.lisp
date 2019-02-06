@@ -17,14 +17,15 @@
 ;controllo che non esista già una classe persona
 (defun def-class (nomeClasse superClassi &rest campi)
   ;(print nomeClasse)
-  (cond ((not (get-class-spec nomeClasse)) (add-class-spec nomeClasse campi))
+  (cond ((not (get-class-spec nomeClasse)) 
+         (add-class-spec nomeClasse campi)
+         (write nomeClasse))         
         (T (print "errore, classe gia presente")))
-  (cond (( )
   )
+;funzione che mi risolve i parents
 
 
 
-)
 
 
 ; Funzione new: 
@@ -43,3 +44,7 @@
    (symbol-plist nomeClasse))
    (T (print "ERRORE, ISTANZA GIA' PRESENTE!"))))
 
+;funzione ricorsiva che 
+(defun scorri-attributi (def-class n lungRagg nomeAttrbuto newValore)
+  
+)
