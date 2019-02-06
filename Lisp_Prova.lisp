@@ -20,10 +20,10 @@
          (print "errore, classe gia presente"))         
         (T (progn
 			(add-class-spec class-name
-				(list class-name parents slot-value)
-				;(list class-name parents 
-				;	(fondi-attributi parents slot-value)
-				;)
+				;(list class-name parents slot-value)
+				(list class-name parents 
+					(fondi-attributi parents slot-value)
+				)
 		)
 		
 		class-name;
@@ -31,11 +31,12 @@
 		
   )))
 ; funzione che mi risolve i parents e attributi
-(defun fondi-attributi (l1 l2)
-
-
-
-)
+(defun fondi-attributi (lp ls)
+; controllo se lp e/o ls ovvero i parent e gli slot sono vuoti
+(cond ((and (null lp) (null ls)) nil); se entrambe vuote non faccio nulla
+	  ((null lp) (create-metod xxx) (set-slot xxx xxx));!!da fare
+	  ((null ls) (create-metod xxx) (set-slot xxx xxx));!!da fare
+))
 
 
 ; Funzione new: ritorna lista contenente valori di istanza
