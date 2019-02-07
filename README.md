@@ -20,7 +20,7 @@ Verifica se la classe è presente nella classes-list -> richiama get-class-spec.
 
 ### Predicati Lisp
 * Consentiti: (quasi) tutto quello che è nello standard ANSI, LET, LET*, defparameter SOLO top-level (non nelle funzioni)
-* Vietati: SET, la SETQ e la SETF (a meno che non strettamente necessarie) (nota: l'uso di setf è consentito per modificare gli elementi di una lista)
+* Vietati: SET, la SETQ e la SETF (a meno che non strettamente necessarie) (nota: l'uso di setf è consentito per modificare gli elementi di una lista); LOOP, DO, DO*, DOTIMES, DOLIST
 * NOTA: Uso pessimo operatori di assegnamento LISP:
 ```(progn
    (setf a 1)
