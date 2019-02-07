@@ -19,7 +19,7 @@
   (cond ((get-class-spec class-name) 
          (print "errore, classe gia presente"))         
         (T (progn
-             (print class-name)
+             ;(print class-name)
              (add-class-spec class-name
                              (list class-name parents (gestione-attributi parents slot-value))
 ;(list class-name parents 
@@ -54,6 +54,74 @@
   ;(flatten (append x y))
 )
 
+;--------
+(defun process-method (method-name method-spec)
+  (setf (fdefinition method-name)
+    (lambda (this &rest args)
+      (apply (get-slot this method-name)
+             (append (list this) args)
+             )
+      )
+    )
+  
+  (eval (rewrite-method-code method-name method-spec))
+ )
+ 
+ (defun rewrite-method-code (method-name method-spec)
+  (cond ((not (symbolp method-name))                ; nome del metodo deve
+         (error "ERRORE: method-name non valido"))  ; essere valido
+
+        ((functionp (car method-spec))  ; funzione già definita.
+         (car method-spec))
+    
+        (T
+         (append (list 'lambda
+                       (cond ((not (null (car method-spec)))
+			; correggi-args per evitare duplicati anche 
+			; negli argomenti.
+                              (progn
+                               ; sotto-condizione
+                               ; per verificare la
+                               ; presenza del this
+                               (cond ((and (listp (car method-spec))
+                                           (not (equalp 
+                                             'this (car (car method-spec)))))
+
+                                   (append '(this) (car method-spec)))
+                                 ; se non c'è lo inserisco io.
+                                 (T (car method-spec))
+                                 )
+                               ))
+                    
+                         (T (list 'this))
+                         
+                         )
+                       )
+                 (cdr method-spec)
+                 )
+         )
+        )
+  )
+ 
+ 
+(defun verifica (temp)
+  (cond ((and (listp (cdr temp))		; se lo slot che gli passo
+              (equalp '=> (cadr temp)))	; ha le caratteristiche di un 
+						; metodo
+         (append (list (car temp)		; lo scrivo nella forma scritta
+                       '=>)			; sopra usando anche la 
+                 (list (process-method		; process-method
+                        (car temp)
+                        (cdr (cdr temp)))
+                       )
+                 )
+         )
+        
+        (T temp)	; se lo slot non è un metodo allora lo ritorno 
+			; senza farci niente
+        )
+  )
+;--------
 ;forse inutile
 (defun appendi (l1 l2)
   (cond ((null l1) l2)
@@ -67,10 +135,11 @@
         (T (append (flatten (first x))
                    (flatten (rest x)))))
 )
-(defun verifica (x)
+
+;(defun verifica (x)
 	;implementare riconoscimento dei metodi
-  (progn x)
-)
+;  (progn x)
+;)
 
 
 
