@@ -19,24 +19,62 @@
   (cond ((get-class-spec class-name) 
          (print "errore, classe gia presente"))         
         (T (progn
-			(add-class-spec class-name
-				(list class-name parents slot-value)
-				;(list class-name parents 
-				;	(fondi-attributi parents slot-value)
-				;)
-		)
+             (print class-name)
+             (add-class-spec class-name
+                             (list class-name parents (gestione-attributi parents slot-value))
+;(list class-name parents 
+;(gestione-attributi parents slot-value)
+;)
+                             )
 		
-		class-name;
-		)
-		
-  )))
-; funzione che mi risolve i parents e attributi
-(defun fondi-attributi (lp ls)
-; controllo se lp e/o ls ovvero i parent e gli slot sono vuoti
-(cond ((and (null lp) (null ls)) nil); se entrambe vuote non faccio nulla
-	  ((null lp) (create-metod xxx) (set-slot xxx xxx));!!da fare
-	  ((null ls) (create-metod xxx) (set-slot xxx xxx));!!da fare
-))
+             class-name))))
+  
+;gestione attributi
+(defun gestione-attributi (par slot)
+ ; (cond ((and ((null par) (null slot))) nil)
+ (cond
+  ((null par) (form nil slot))
+   ((null slot)(form par nil))
+   (T (form par slot))
+   )
+)
+
+(defun form (par slot)
+	;aggiungere la verifica che sia un metodo
+	(cond ((null par) (verifica slot))
+	((null slot) (verifica par))
+	(T (concatena (first (verifica
+                              (rest(rest(get-class-spec (first par)))))) 
+                      (verifica slot)))
+	)
+)
+
+(defun concatena (x y)
+  (append x y)
+  ;(flatten (append x y))
+)
+
+;forse inutile
+(defun appendi (l1 l2)
+  (cond ((null l1) l2)
+        (T (list (first l1) (appendi (rest l1) l2))))
+)
+
+;forse inutile
+(defun flatten (x)
+  (cond ((null x) x)
+        ((atom x) (list x))
+        (T (append (flatten (first x))
+                   (flatten (rest x)))))
+)
+(defun verifica (x)
+	;implementare riconoscimento dei metodi
+  (progn x)
+)
+
+
+
+
 
 
 ; Funzione new: ritorna lista contenente valori di istanza
