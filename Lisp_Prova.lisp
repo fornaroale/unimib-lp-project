@@ -151,8 +151,9 @@
   (cond ((get-class-spec class-name)  ; verifico esistenza classe
     ; copio attributi classe (e parenti) in istanza e rimpiazzo valori
     ; default con valori istanza:
-    (setq class-specs (copy-tree (get-class-spec class-name)))
-    (list 'oolinst (checkSlot class-specs slot 0))
+    (let ((class-specs (copy-tree (get-class-spec class-name))))
+      (list 'oolinst (checkSlot class-specs slot 0))
+    )
   )(T (print "Errore: classe inesistente!")))
 )
 
