@@ -32,6 +32,7 @@
 ;gestione attributi
 (defun gestione-attributi (par slot)
  ; (cond ((and ((null par) (null slot))) nil)
+ ;(cond ((null par) (cond (null slot) nil) nil)
  (cond
   ((null par) (form nil slot))
    ((null slot)(form par nil))
@@ -106,7 +107,7 @@
  
 (defun verifica (temp)
   (cond ((and (listp (cdr temp))		; se lo slot che gli passo
-              (equalp '=> (cadr temp)))	; ha le caratteristiche di un 
+              (equalp '=> (car(car(cdr temp)))))	; ha le caratteristiche di un 
 						; metodo
          (append (list (car temp)		; lo scrivo nella forma scritta
                        '=>)			; sopra usando anche la 
