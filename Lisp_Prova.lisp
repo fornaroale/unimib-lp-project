@@ -40,9 +40,11 @@
    )
 )
 
+;da sistemare 
 (defun form (par slot)
 	;aggiungere la verifica che sia un metodo
-	(cond ((null par) (verifica slot))
+	(cond ((and (null par) (null slot)) nil)
+	((null par) (verifica slot))
 	((null slot) (verifica par))
 	(T (concatena (first (verifica
                               (rest(rest(get-class-spec (first par)))))) 
@@ -68,28 +70,22 @@
   (eval (rewrite-method-code method-name method-spec))
  )
  
- (defun rewrite-method-code (method-name method-spec)
-  (cond ((not (symbolp method-name))                ; nome del metodo deve
-         (error "ERRORE: method-name non valido"))  ; essere valido
+(defun rewrite-method-code (method-name method-spec)
+  (cond ((not (symbolp method-name))    
+         (error "ERRORE: method-name non valido"))
 
-        ((functionp (car method-spec))  ; funzione già definita.
+        ((functionp (car method-spec))
          (car method-spec))
     
         (T
          (append (list 'lambda
                        (cond ((not (null (car method-spec)))
-			; correggi-args per evitare duplicati anche 
-			; negli argomenti.
                               (progn
-                               ; sotto-condizione
-                               ; per verificare la
-                               ; presenza del this
                                (cond ((and (listp (car method-spec))
-                                           (not (equalp 
+                                          (not (equalp 
                                              'this (car (car method-spec)))))
 
                                    (append '(this) (car method-spec)))
-                                 ; se non c'è lo inserisco io.
                                  (T (car method-spec))
                                  )
                                ))
@@ -102,26 +98,23 @@
                  )
          )
         )
-  )
+)
  
  
 (defun verifica (temp)
-  (cond ((and (listp (cdr temp))		; se lo slot che gli passo
-              (equalp '=> (car(car(cdr temp)))))	; ha le caratteristiche di un 
-						; metodo
-         (append (list (car temp)		; lo scrivo nella forma scritta
-                       '=>)			; sopra usando anche la 
-                 (list (process-method		; process-method
+  (cond ((and (listp (cdr temp))
+              (equalp '=> (car(cdr temp))))
+         (append (list (car temp)
+                       '=>)
+                 (list (process-method
                         (car temp)
                         (cdr (cdr temp)))
                        )
                  )
          )
-        
-        (T temp)	; se lo slot non è un metodo allora lo ritorno 
-			; senza farci niente
+        (T temp)
         )
-  )
+)
 ;--------
 ;forse inutile
 (defun appendi (l1 l2)
