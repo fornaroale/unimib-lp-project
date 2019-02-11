@@ -13,7 +13,7 @@
 ; definizione del metodo defun-class
 ; come prima cosa deve creare un link sulla hashtable 
 ; basandomi sul nomClasse
-;controllo che non esista già una classe persona
+;controllo che non sista gia' una classe persona
 (defun def-class (class-name parents &rest slot-value)
   ;controlli
   (cond ((get-class-spec class-name) 
@@ -41,10 +41,17 @@
 	;aggiungere la verifica che sia un metodo
   (cond ((and (null par) (null slot)) nil)
 	((null par) (verificaR slot (length slot)))
-	((null slot) (verificaR par (length par)))
-	(T (concatena (first (rest(rest(get-class-spec (first par))))) 
+	((null slot) (risolvi-par par))
+	(T (concatena (risolvi-par par) 
                       (verificaR slot (length slot))))
 	)
+  )
+
+(defun risolvi-par (par)
+  (cond ((equal (length par) 0) nil)
+        ((append (first(rest(rest(get-class-spec (first par))))) 
+                 (risolvi-par (rest par))))
+        )
   )
 
 (defun concatena (x y)
