@@ -184,3 +184,62 @@
                     )
                    );(t (print "Errore: uno degli attributi specificati e' inesistente!"))
              )))
+			 
+			 
+			 
+;Verifico che l'istanza inizi per "oolinst", altrimenti stampo un errore
+;Se esiste, verifico che slot-name sia un simbolo
+;Se e' tutto okay, calcolo il valore dell'attributo richiesto richiamando la funzione get-slot-value
+
+(defun getv (instance slot-name) ;instance -> lista slot-name(campo) -> simbolo
+  (cond 
+   ((check-getv instance slot-name) ;verifico se i dati in input alla funzione siano corretti
+    (get-slot-value instance slot-name)) ;se lo sono ritorno l'elemento
+   )
+  )
+
+(defun check-getv (instance slot-name) 
+  (cond 
+   ((not (equal (car instance) "OOLINST"))) ((error "Non inizia con oolinst"));check instance
+   ((not (symbolp slot-name))) ((print "Errore: slot-name non è un simbolo"));check slot name=simbolo
+   )       
+  )
+
+(defun get-slot-value (instance slot-name);recupera attributo richiesto
+  ;prende l'elemento alla posizione successiva rispetto al nome dell'attributo, dalla 
+  ;sottolista contenuta nel'instanza in cui sono contenuti tutti gli attributi
+ 
+ (getElAtPos (+ 1 (getPos slot-name (extract-attributes-list instance))) 
+              (extract-attributes-list instance) )
+ ; (cond 
+  ; (()())
+)
+
+(defun extract-attributes-list (instance)  ;ritorna la sotto-lista degli attributi
+  (nth 2 (car (rest instance)))
+  )
+
+(defun getElAtPos (pos l) ;ritorna l'elemento di una lista data la posizione
+  (cond 
+   ((<= pos 0) (car l))
+   (T (getElAtPos (- pos 1) (cdr l)))
+   )
+  )
+(defun getPos (el l) ;ritorna la posizione di un dato elemento in una lista
+  (cond 
+   ((null l)(error "Attributo non presente"))
+   ((eql (car l) el) 0)
+   (T (+ 1 (cond
+            ((not (null (cdr l))) (getPos el (rest l)))
+            (t (getPos el '()))
+            )
+         )
+      )
+   )
+  )
+			 
+			 
+			 
+			 
+			 
+			 
