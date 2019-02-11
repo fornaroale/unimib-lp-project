@@ -193,16 +193,16 @@
 
 (defun getv (instance slot-name) ;instance -> lista slot-name(campo) -> simbolo
   (cond 
-   ((check-getv instance slot-name) ;verifico se i dati in input alla funzione siano corretti
+   (T (check-getv instance slot-name) ;verifico se i dati in input alla funzione siano corretti
     (get-slot-value instance slot-name)) ;se lo sono ritorno l'elemento
    )
   )
 
 (defun check-getv (instance slot-name) 
   (cond 
-   ((not (equal (car instance) "OOLINST"))) ((error "Non inizia con oolinst"));check instance
-   ((not (symbolp slot-name))) ((print "Errore: slot-name non è un simbolo"));check slot name=simbolo
-   )       
+   ((not (equal (car instance) 'OOLINST)) (error "Non inizia con oolinst"));check instance
+   ((not (symbolp slot-name)) (print "Errore: slot-name non Ã¨ un simbolo"));check slot name=simbolo
+   )
   )
 
 (defun get-slot-value (instance slot-name);recupera attributo richiesto
@@ -210,9 +210,7 @@
   ;sottolista contenuta nel'instanza in cui sono contenuti tutti gli attributi
  
  (getElAtPos (+ 1 (getPos slot-name (extract-attributes-list instance))) 
-              (extract-attributes-list instance) )
- ; (cond 
-  ; (()())
+              (extract-attributes-list instance))
 )
 
 (defun extract-attributes-list (instance)  ;ritorna la sotto-lista degli attributi
@@ -220,12 +218,14 @@
   )
 
 (defun getElAtPos (pos l) ;ritorna l'elemento di una lista data la posizione
+  ;(print l)
   (cond 
    ((<= pos 0) (car l))
    (T (getElAtPos (- pos 1) (cdr l)))
    )
   )
 (defun getPos (el l) ;ritorna la posizione di un dato elemento in una lista
+  ;(print l)
   (cond 
    ((null l)(error "Attributo non presente"))
    ((eql (car l) el) 0)
@@ -238,6 +238,26 @@
    )
   )
 			 
+
+;getvx deve ritornare una lista contenente l'elenco di valori richiesti dall'utente
+;prendo il primo elemento
+
+(defun getvx (instance &rest slot-name)
+  (cond 
+   ((not (null (car slot-name))) 
+    (append (list (getv instance (car slot-name))) 
+             (getvx instance (car (rest slot-name)))))
+   )
+  )			 
+;probabilmente inutile
+(defun length-list (l)
+  (cond 
+   ((null l) 0)
+   ((null (car l)) 1)
+   ((not (null (car (rest l)))) (+ 1 (length (rest l))))
+   )
+  )
+	 
 			 
 			 
 			 
