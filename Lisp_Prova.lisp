@@ -63,54 +63,58 @@
 (defun process-method (method-name method-spec)
   (setf (fdefinition method-name)
         (lambda (this &rest args)
-          (apply (get-slot this method-name)
+          (apply (getv this method-name)
                  (append (list this) args)
                  )
           )
-        )  
+        )
+  
+  ;(cond ((equal 
+  ;        (car (car method-spec))
+  ;        'this)
+  ;      (setf (fdefinition method-name) (lambda (car method-spec) (cdr method-spec))))
   (eval (rewrite-method-code method-name method-spec))
   )
 
 (defun rewrite-method-code (method-name method-spec)
   (cond ((not (symbolp method-name))    
-         (error "ERRORE: method-name non valido"))
-        
-        ((functionp (car method-spec))
-         (car method-spec))        
+         (error "Errore, il metodo non è costruito correttamente"))
+        ((functionp (car method-spec)) ;se il primo elemento del metodo è gia una funzione
+         (car method-spec)) ;ritorno la funzione
         (T
-         (append (list 'lambda
-                       (cond ((not (null (car method-spec)))
+         (append (list 'lambda ;creo la funzione lambda
+                       (cond ((not (null (car method-spec))) ;prima verificando se ci sono altri parametri
                               (progn
-                                (cond ((and (listp (car method-spec))
+                                (cond ((and (listp (car method-spec)) ;se i parametri del metodo sono una lista
                                             (not (equalp 
-                                                  'this (car (car method-spec)))))
-                                       (append '(this) (car method-spec)))
-                                      (T (car method-spec))
+                                                  'this (car (car method-spec))))) ; e non ho gia la this
+                                       (append '(this) (car method-spec))) ;allora aggiungo la this
+                                      (T (car method-spec)) ;e ritorno tutti i parametri
                                       )
                                 ))
-                             (T (list 'this))
+                             (T (list 'this)) ;altrimenti se non ci sono aggiungo solamente la this e ritorno
                              )
-                       )
-                 (cdr method-spec)
+                      )
+                 (cdr method-spec) ;aggiungo in coda a lambda e ai parametri, la funzione
                  )
          )
         )
   )
 
-(defun verificaR (temp n)
+(defun verificaR (temp n) ;scorro 2 a 2 perchè una lista, e verifico chiamando verifica
   (cond ((equal n 0) nil)
         (T (append (verifica (subseq temp 0 2))
                    (verificaR (subseq temp 2 n) (- n 2))))
         )
   )
 (defun verifica (temp)
-  (cond ((and (listp (car(cdr temp)))
-              (equalp '=> (car(car(cdr temp)))))
+  (cond ((and (listp (car(cdr temp))); se il corpo è una lista
+              (equalp '=> (car(car(cdr temp))))); se trovo il simbolo di metodo, è un metodo
          (append (list (car temp)
                        '=>)
                  (list (process-method
                         (car temp)
-                        (cdr (cdr temp)))
+                        (cdr (car (cdr temp))))
                        )
                  )
          )
