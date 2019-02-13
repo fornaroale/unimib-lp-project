@@ -67,8 +67,8 @@
 
 (defun rewrite-method-code (method-name method-spec)
   (cond ((not (symbolp method-name))    
-         (error "Errore, il metodo non è costruito correttamente"))
-        ((functionp method-spec) ;se il primo elemento del metodo è gia una funzione
+         (error "Errore, il metodo non e' costruito correttamente"))
+        ((functionp method-spec) ;se il primo elemento del metodo e' gia una funzione
          method-spec) ;ritorno la funzione
         (T
          (append (list 'lambda ;creo la funzione lambda
@@ -90,15 +90,15 @@
         )
   )
 
-(defun verificaR (temp n) ;scorro 2 a 2 perchè una lista, e verifico chiamando verifica
+(defun verificaR (temp n) ;scorro 2 a 2 perche' una lista, e verifico chiamando verifica
   (cond ((equal n 0) nil)
         (T (append (verifica (subseq temp 0 2))
                    (verificaR (subseq temp 2 n) (- n 2))))
         )
   )
 (defun verifica (temp)
-  (cond ((and (listp (car(cdr temp))); se il corpo è una lista
-              (equalp '=> (car(car(cdr temp))))); se trovo il simbolo di metodo, è un metodo
+  (cond ((and (listp (car(cdr temp))); se il corpo e' una lista
+              (equalp '=> (car(car(cdr temp))))); se trovo il simbolo di metodo, e' un metodo
          (append (list (car temp)
                        '=>)
                  (list (process-method
@@ -175,7 +175,7 @@
          )(t (cond ((< contSlotInstance (length instanceList))
                     (setInstVal instanceList slot-name slot-value (+ 2 contSlotInstance))
                     )
-                   );(t (print "Errore: uno degli attributi specificati e' inesistente!"))
+                   )(t (error "~S --> attributo non esistente!" slot-name))
              )))
 			 
 			 
