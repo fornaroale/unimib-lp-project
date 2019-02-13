@@ -61,26 +61,15 @@
 
 ;--------
 (defun process-method (method-name method-spec)
-  (setf (fdefinition method-name)
-        (lambda (this &rest args)
-          (apply (getv this method-name)
-                 (append (list this) args)
-                 )
-          )
-        )
-  
-  ;(cond ((equal 
-  ;        (car (car method-spec))
-  ;        'this)
-  ;      (setf (fdefinition method-name) (lambda (car method-spec) (cdr method-spec))))
+  (cond ((functionp method-spec) (setf (fdefinition method-name) method-spec)))
   (eval (rewrite-method-code method-name method-spec))
   )
 
 (defun rewrite-method-code (method-name method-spec)
   (cond ((not (symbolp method-name))    
          (error "Errore, il metodo non è costruito correttamente"))
-        ((functionp (car method-spec)) ;se il primo elemento del metodo è gia una funzione
-         (car method-spec)) ;ritorno la funzione
+        ((functionp method-spec) ;se il primo elemento del metodo è gia una funzione
+         method-spec) ;ritorno la funzione
         (T
          (append (list 'lambda ;creo la funzione lambda
                        (cond ((not (null (car method-spec))) ;prima verificando se ci sono altri parametri
