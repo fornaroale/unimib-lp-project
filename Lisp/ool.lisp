@@ -17,9 +17,10 @@
 (defun def-class (class-name parents &rest slot-value)
   ;controlli
   (cond ((get-class-spec class-name) 
-         (print "errore, classe gia presente"))         
+         (format *error-output* "errore, classe gia presente"))
+        ((listp class-name) (format *error-output* "il nome classe non può essere una lista"))
+        ((and (not (null parents)) (atom parents)) (format *error-output* "errore, la classe parent deve essere una lista"))
         (T (progn
-             ;(print class-name)
              (add-class-spec class-name
                              (list class-name parents (gestione-attributi parents slot-value))
                              )	
@@ -61,49 +62,12 @@
 
 ;--------
 (defun process-method (method-name method-spec)
-  (cond ((not (null method-name)) (setf (fdefinition method-name) method-spec)))
-  (eval (rewrite-method-code method-name method-spec))
-  )
-
-(defun rewrite-method-code (method-name method-spec)
-  (cond ((not (symbolp method-name))    
-         (error "Errore, il metodo non e' costruito correttamente"))
-        
-        ((equal (second method-spec) '=>); se il secondo elemento del metodo è => 
-         method-spec) ;il metodo è gia stato settato in modo corretto, e lo ritorno
-        
-        ;devo impacchettare in modo corretto il metodo
-        (t (append 
-           (list method-name '=>)
-            (append 
-             (cond ((equal (first (first method-spec)) 'this) (first (first method-spec)))
-                  (t (append '(this) (first method-spec))))
-            (car (last method-spec)) )
-            ))
-        )
-  )
-
-(defun verificaR (temp n) ;scorro 2 a 2 perche' una lista, e verifico chiamando verifica
-  (cond ((equal n 0) nil)
-        (T (append (verifica (subseq temp 0 2))
-                   (verificaR (subseq temp 2 n) (- n 2))))
-        )
-  )
-(defun verifica (temp)
-  (cond ((and (listp (car(cdr temp))); se il corpo e' una lista
-              (equalp '=> (car(car(cdr temp))))); se trovo il simbolo di metodo, e' un metodo
-         (append (list (car temp)
-                       '=>)
-                 (list (process-method
-                        (car temp)
-                        (cdr (car (cdr temp))))
-                       )
-                 )
-         )
-        (T temp) 
-        )
-  )(defun process-method (method-name method-spec)
-  (cond ((functionp method-spec) (setf (fdefinition method-name) method-spec)))
+  (setf (fdefinition method-name)
+    (lambda (this &rest args)
+      (apply (getv this method-name)
+             (append '(this) args)
+             ))
+    )
   (eval (rewrite-method-code method-name method-spec))
   )
 
@@ -123,7 +87,7 @@
                                       (T (car method-spec)) ;e ritorno tutti i parametri
                                       )
                                 ))
-                             (T (list 'this)) ;altrimenti se non ci sono aggiungo solamente la this e ritorno
+                             (T  '(this)) ;altrimenti se non ci sono aggiungo solamente la this e ritorno
                              )
                       )
                  (cdr method-spec) ;aggiungo in coda a lambda e ai parametri, la funzione
@@ -141,8 +105,7 @@
 (defun verifica (temp)
   (cond ((and (listp (car(cdr temp))); se il corpo e' una lista
               (equalp '=> (car(car(cdr temp))))); se trovo il simbolo di metodo, e' un metodo
-         (append (list (car temp)
-                       '=>)
+         (append (list (car temp))
                  (list (process-method
                         (car temp)
                         (cdr (car (cdr temp))))
