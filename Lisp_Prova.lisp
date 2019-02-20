@@ -61,6 +61,48 @@
 
 ;--------
 (defun process-method (method-name method-spec)
+  (cond ((not (null method-name)) (setf (fdefinition method-name) method-spec)))
+  (eval (rewrite-method-code method-name method-spec))
+  )
+
+(defun rewrite-method-code (method-name method-spec)
+  (cond ((not (symbolp method-name))    
+         (error "Errore, il metodo non e' costruito correttamente"))
+        
+        ((equal (second method-spec) '=>); se il secondo elemento del metodo è => 
+         method-spec) ;il metodo è gia stato settato in modo corretto, e lo ritorno
+        
+        ;devo impacchettare in modo corretto il metodo
+        (t (append 
+           (list method-name '=>)
+            (append 
+             (cond ((equal (first (first method-spec)) 'this) (first (first method-spec)))
+                  (t (append '(this) (first method-spec))))
+            (car (last method-spec)) )
+            ))
+        )
+  )
+
+(defun verificaR (temp n) ;scorro 2 a 2 perche' una lista, e verifico chiamando verifica
+  (cond ((equal n 0) nil)
+        (T (append (verifica (subseq temp 0 2))
+                   (verificaR (subseq temp 2 n) (- n 2))))
+        )
+  )
+(defun verifica (temp)
+  (cond ((and (listp (car(cdr temp))); se il corpo e' una lista
+              (equalp '=> (car(car(cdr temp))))); se trovo il simbolo di metodo, e' un metodo
+         (append (list (car temp)
+                       '=>)
+                 (list (process-method
+                        (car temp)
+                        (cdr (car (cdr temp))))
+                       )
+                 )
+         )
+        (T temp) 
+        )
+  )(defun process-method (method-name method-spec)
   (cond ((functionp method-spec) (setf (fdefinition method-name) method-spec)))
   (eval (rewrite-method-code method-name method-spec))
   )
