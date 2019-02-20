@@ -166,22 +166,33 @@
                      (nth (+ 1 slotCount) slot)
                      0)
     ; proseguo con 'attributo' successivo
-         (checkSlot instanceList slot (+ 2 slotCount))))
-  instancelist
-  )
+         (checkSlot instanceList slot (+ 2 slotCount)))
+  ; ritorno la lista
+        (T instancelist)))
+
 
 
 ; Funzione setInstVal: sostituisce il val. default con val. istanza
 (defun setInstVal (instanceList slot-name slot-value contSlotInstance)
-  (cond ((equal (nth contSlotInstance instanceList) slot-name)
-    ; sostituisco slot-value con valore nuovo
-         (setf (nth (+ 1 contSlotInstance) instanceList) slot-value)
+  (cond 
+   ((and (equal (nth contSlotInstance instanceList) slot-name)
+         (not (functionp (nth (+ 1 contSlotInstance) instanceList))))
+    ; sostituisco val. default con val. istanza deciso da utente:
+    (listReplace instanceList (+ 1 contSlotInstance) slot-value)
     ; altrimenti proseguo nella ricerca (ammesso che cont < length)
-         )(t (cond ((< contSlotInstance (length instanceList))
-                    (setInstVal instanceList slot-name slot-value (+ 2 contSlotInstance))
-                    )
-                   )(t (error "~S --> attributo non esistente!" slot-name))
-             )))
+    )(T (cond ((< (+ 2 contSlotInstance) (length instanceList))
+               (setInstVal instanceList slot-name slot-value (+ 2 contSlotInstance)))
+              (T (error "~S --> attributo non esistente!" slot-name))
+        ))))
+
+
+
+; Funzione per sostituzione n-esimo valore di una lista
+(defun listReplace (list n elem)
+  (cond
+   ((null list) ())
+   ((= n 0) (cons elem list))
+   (t (cons (car list) (listReplace (cdr list) (1- n) elem)))))
 			 
 			 
 			 
