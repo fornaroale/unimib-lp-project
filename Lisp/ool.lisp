@@ -28,16 +28,32 @@
 
 ;gestione attributi
 (defun gestione-attributi (par slot)
- ; (cond ((and ((null par) (null slot))) nil)
- ;(cond ((null par) (cond (null slot) nil) nil)
   (cond
-   ((null par) (form nil slot))
-   ((null slot)(form par nil))
-   (T (form par slot))
-   )
+   ((not(null par)) 
+     (cond
+      ((not (esistePar par)) (error "una o piu classi padre non esiste"))
+      ((not (null slot))(verificaR slot (length slot)))
+      ;(t nil)
+      )
+     )
+    )
   )
 
-;da sistemare 
+;controlla esistenza parents
+(defun esistePar (listaP)
+  (cond ((atom listaP) 
+         (cond ((get-class-spec listaP) T)
+               (t nil))
+         )
+        ((eql (length listaP) 1) 
+         (cond ((get-class-spec (car listaP)) T)
+               (t nil))
+         )
+        (t (and (esistePar (first listaP)) 
+                (esistePar (rest listaP))))
+  ))
+
+; da cancellare INUTILIZZTA
 (defun form (par slot)
 	;aggiungere la verifica che sia un metodo
   (cond ((and (null par) (null slot)) nil)
@@ -47,7 +63,7 @@
                       (verificaR slot (length slot))))
 	)
   )
-
+; da cancellare INUTILIZZATA
 (defun risolvi-par (par)
   (cond ((equal (length par) 0) nil)
         ((append (first(rest(rest(get-class-spec (first par))))) 
