@@ -163,8 +163,9 @@
            ; copio nella istanza gli attributi delle classi parent (!=NILL)
       (cond
        ((not (null (second class-specs)))
-        (searchParents class-name '())
-        (write class-specs)))
+       (write (searchParents class-name '()))
+        ;(write class-specs)
+        ))
       ; rimpiazzo valori default con valori di istanza
       ;(list 'oolinst (checkSlot class-specs slot 0))
       )
@@ -368,7 +369,26 @@
    )
   )
 	 
-			 
+;; test input
+
+
+(def-class 'protoni nil)
+(def-class 'neutroni nil)
+(def-class 'elettroni nil)
+(def-class 'neutrini nil)
+(def-class 'molecole '(protoni neutroni elettroni) 'stato :quantico)
+(def-class 'muschio '(molecole neutrini) 'piangi '(=> () (write "weee")) 'stato 'vita)
+(def-class 'ecosistema '(muschio) :stato :vita)
+(def-class 'uomo '(molecole) 'nome "unbound" :cognome :unbound)
+(def-class 'citta '(uomo) 'nomeCitta :unbound)
+(def-class 'pianeta '(citta ecosistema) 'nomeSistema 'terra)
+
+(def-class 'a nil 'nome "lettera")
+(def-class 'b nil 'valore "unbound")
+(def-class 'c nil 'nanna "zzzzzz")
+(def-class 'd nil 'spina "non inclusa")
+(def-class 'lettereab '(a b) 'spazio "universo")
+(def-class 'alfabeto '(lettereab c) 'metodi "parlami") 	 
 			 
 			 
 			 
