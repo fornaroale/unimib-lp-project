@@ -174,31 +174,47 @@
 ; Funzione searchParents: controlla che la classe abbia parents e, in tal
 ; caso, copia gli attributi delle classi genitore nell'istanza
 (defun searchParents (class-name instanceList)
-  (cond
+  (cond 
+   ; se la classe non e' ulla
    ((not (null class-name))
+    ;mi salvo i parents della classe in parents
     (let ((parents (second (get-class-spec class-name))))
       (cond 
+       ;se parents e' un atomo
        ((atom parents)
         (append
          (cond
+          ; ed e' null
           ((null parents)
+           ; e la class name e' un atomo
            (cond ((atom class-name)
+                  ;allora copio istanceList e gli attributi
+                  ;della classe su cui sono
                   (copySlotsInIstance instanceList
                                       (car (last (get-class-spec class-name)))
                                       0))
+                 ; se la class-name non e' un atomo copio comunque i valori
+                 ; degli attributi della classe su cui sono
                  (t (copySlotsInIstance (searchParents parents instanceList)
                                         (car
                                          (last 
                                           (get-class-spec (car class-name))))
                                         0))))
+          ; se la classe name non e' un atomo
+          ; copio gli attributi dei parents
           (T (copySlotsInIstance instanceList
                                  (car (last (get-class-spec parents)))
                                  0)))))
+       ; se parents è una lista ma ha un solo elemento
+       ; copio gli attributi dei parents
        ((eql (length parents) 1)
         (append 
          (copySlotsInIstance (searchParents (car parents) instanceList)
                              (car (last (get-class-spec (car parents))))
                              0)))
+       ; altrimenti, se parents non è un atomo 
+       ; richiamo ricorsivamente sul primo elemento
+       ; e sul resto dei parents
        (t (append (searchParents (first parents) instanceList) 
                   (searchParents (rest parents) instanceList))
           ))))))
@@ -384,4 +400,8 @@
 (def-class 'alfabetoDue '(lettereab c d) 'metodi "sono il nuovo alphab")			 
 			 
 			 
-			 
+(def-class 'uno nil 'attuno :unoAtt)
+(def-class 'due nil 'attdue :dueAtt)	
+(def-class 'tre nil 'atttre :treAtt)	
+(def-class 'quattro nil 'attquattro :quattroAtt)
+(def-class 'primi4 '(uno due tre quattro) 'valore :siamoIPrimi4)	
