@@ -160,15 +160,13 @@
   (cond
    ((get-class-spec class-name)  ; verifico esistenza classe
     (let ((class-specs (copy-tree (get-class-spec class-name))))
-           ; copio nella istanza gli attributi delle classi parent (!=NILL)
-      (cond
-       ((not (null (second class-specs)))
-       (write (searchParents class-name '()))
-        ;(write class-specs)
-        ))
-      ; rimpiazzo valori default con valori di istanza
-      ;(list 'oolinst (checkSlot class-specs slot 0))
-      )
+      (list 'oolinst
+            class-name
+            (second (get-class-spec class-name))
+            (checkSlot (searchParents class-name
+                                      (first (last class-specs)))
+                       slot
+                       0)))
     )(T (error "~S --> classe inesistente!" class-name))))
 
 
@@ -179,40 +177,31 @@
   (cond
    ((not (null class-name))
     (let ((parents (second (get-class-spec class-name))))
-      (cond ((atom parents)
-             (append
-              (cond
-               ((null parents)
-                (cond ((atom class-name)
-                      (copySlotsInIstance (searchParents parents instanceList)
-                                          (car (last (get-class-spec class-name)))
-                                    0))
-                      (t (copySlotsInIstance (searchParents parents instanceList)
-                                             (car (last (get-class-spec (car class-name))))
-                                    0))                
-                      )
-                
-                )
-               (T (copySlotsInIstance instanceList
-                                      (car (last (get-class-spec parents)))
+      (cond 
+       ((atom parents)
+        (append
+         (cond
+          ((null parents)
+           (cond ((atom class-name)
+                  (copySlotsInIstance instanceList
+                                      (car (last (get-class-spec class-name)))
                                       0))
-               )
-              )
-             )
-             ((eql (length parents) 1)
-              (append 
-               (copySlotsInIstance (searchParents (car parents) instanceList)
-                                   (car (last (get-class-spec (car parents))))
-                                   0)
-               ))
-             (t (append (searchParents (first parents) instanceList) 
-                        (searchParents (rest parents) instanceList))
-                )
-             )
-      )
-    )
-   )
-  )
+                 (t (copySlotsInIstance (searchParents parents instanceList)
+                                        (car
+                                         (last 
+                                          (get-class-spec (car class-name))))
+                                        0))))
+          (T (copySlotsInIstance instanceList
+                                 (car (last (get-class-spec parents)))
+                                 0)))))
+       ((eql (length parents) 1)
+        (append 
+         (copySlotsInIstance (searchParents (car parents) instanceList)
+                             (car (last (get-class-spec (car parents))))
+                             0)))
+       (t (append (searchParents (first parents) instanceList) 
+                  (searchParents (rest parents) instanceList))
+          ))))))
 
 
 
@@ -247,8 +236,8 @@
                             slot-name 
                             slot-value 
                             (+ 2 contSlotParents)))
-              ; se arrivo qui, significa che lo slot non c'era in eventuali padri:
-              ; faccio la append e inserisco l'attributo/metodo
+              ; se arrivo qui, significa che lo slot non c'era in eventuali
+              ; padri: faccio la append e inserisco l'attributo/metodo
               (T (append instanceList (list slot-name slot-value)))
         ))))
 
@@ -262,13 +251,13 @@
 (defun checkSlot (instanceList slot slotCount)
   (cond ((< slotCount (length slot))
     ; lista slot: in pos. slotCount ho il nome dello slot, in pos.
-    ; slotCount+1 ho il relativo valore
-         (setInstVal (nth 2 instanceList) 
-                     (nth slotCount slot) 
-                     (nth (+ 1 slotCount) slot)
-                     0)
-    ; proseguo con 'attributo' successivo
-         (checkSlot instanceList slot (+ 2 slotCount)))
+    ; slotCount+1 ho il relativo valore,
+    ; e proseguo con 'attributo' successivo
+         (checkSlot (setInstVal instanceList 
+                                (nth slotCount slot) 
+                                (nth (+ 1 slotCount) slot)
+                                0)
+                    slot (+ 2 slotCount)))
   ; ritorno la lista
         (T instanceList)))
 
@@ -283,13 +272,16 @@
     (listReplace instanceList (+ 1 contSlotInstance) slot-value)
     ; altrimenti proseguo nella ricerca (ammesso che cont < length)
     )(T (cond ((< (+ 2 contSlotInstance) (length instanceList))
-               (setInstVal instanceList slot-name slot-value (+ 2 contSlotInstance)))
+               (setInstVal instanceList
+                           slot-name
+                           slot-value 
+                           (+ 2 contSlotInstance)))
               (T (error "~S --> attributo inesistente!" slot-name))
         ))))
 
 
 
-; Funzione per sostituzione n-esimo valore di una lista
+; Funzione per sostituzione n-esimo valore di una lista con 'elem'
 (defun listReplace (list n elem)
   (cond
    ((null list) ())
@@ -372,12 +364,12 @@
 ;; test input
 
 
-(def-class 'protoni nil)
-(def-class 'neutroni nil)
-(def-class 'elettroni nil)
+(def-class 'protoni nil 'attrProtoni "prova protoni")
+(def-class 'neutroni nil 'attrNeutroni "prova neutroni")
+(def-class 'elettroni nil 'attrElettroni "prova importante")
 (def-class 'neutrini nil)
 (def-class 'molecole '(protoni neutroni elettroni) 'stato :quantico)
-(def-class 'muschio '(molecole neutrini) 'piangi '(=> () (write "weee")) 'stato 'vita)
+(def-class 'muschio '(molecole neutrini) 'piangi '(=> () (write "weee")) 'stato "vita")
 (def-class 'ecosistema '(muschio) :stato :vita)
 (def-class 'uomo '(molecole) 'nome "unbound" :cognome :unbound)
 (def-class 'citta '(uomo) 'nomeCitta :unbound)
@@ -385,11 +377,11 @@
 
 (def-class 'a nil 'nome "lettera")
 (def-class 'b nil 'valore "unbound")
-(def-class 'c nil 'nanna "zzzzzz")
+(def-class 'c nil 'metodi "zzzzzz")
 (def-class 'd nil 'spina "non inclusa")
 (def-class 'lettereab '(a b) 'spazio "universo")
-(def-class 'alfabeto '(lettereab c) 'metodi "parlami") 	 
-			 
+(def-class 'alfabeto '(lettereab c) 'asdrubale "leggio") 	 
+(def-class 'alfabetoDue '(lettereab c d) 'metodi "sono il nuovo alphab")			 
 			 
 			 
 			 
