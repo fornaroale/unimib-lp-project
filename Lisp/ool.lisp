@@ -20,11 +20,11 @@
          (format *error-output* "errore, classe gia presente"))
         ((listp class-name) (format *error-output* "il nome classe non pu� essere una lista"))
         ((and (not (null parents)) (atom parents)) (format *error-output* "errore, la classe parent deve essere una lista"))
-        (T (progn
+        (T 
              (add-class-spec class-name
                              (list class-name parents (gestione-attributi parents slot-value))
                              )	
-             class-name))))
+             class-name)))
 
 ;gestione attributi
 (defun gestione-attributi (par slot)
