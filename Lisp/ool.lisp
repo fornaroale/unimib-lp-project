@@ -18,7 +18,7 @@
   ;controlli
   (cond ((get-class-spec class-name) 
          (format *error-output* "errore, classe gia presente"))
-        ((listp class-name) (format *error-output* "il nome classe non pu� essere una lista"))
+        ((listp class-name) (format *error-output* "il nome classe non pu� essere una lista"))
         ((and (not (null parents)) (atom parents)) (format *error-output* "errore, la classe parent deve essere una lista"))
         (T (progn
              (add-class-spec class-name
@@ -36,8 +36,7 @@
       ;(t nil)
       )
      )
-    )
-  )
+   ((not (null slot))(verificaR slot (length slot)))))
 
 ;controlla esistenza parents
 (defun esistePar (listaP)
@@ -157,15 +156,101 @@
 
 
 ; Funzione new: ritorna lista contenente valori di istanza
-(defun new (class-name &rest slot) ;<-- slot: lista di attributi di classe
-  (cond ((get-class-spec class-name)  ; verifico esistenza classe
-    ; copio attributi classe (e parenti) in istanza e rimpiazzo valori
-    ; default con valori istanza:
-         (let ((class-specs (copy-tree (get-class-spec class-name))))
-           (list 'oolinst (checkSlot class-specs slot 0))
-           )
-         )(T (print "Errore: classe inesistente!")))
+(defun new (class-name &rest slot) ;<-- slot = lista di attributi di classe
+  (cond
+   ((get-class-spec class-name)  ; verifico esistenza classe
+    (let ((class-specs (copy-tree (get-class-spec class-name))))
+           ; copio nella istanza gli attributi delle classi parent (!=NILL)
+      (cond
+       ((not (null (second class-specs)))
+        (searchParents class-name '())
+        (write class-specs)))
+      ; rimpiazzo valori default con valori di istanza
+      ;(list 'oolinst (checkSlot class-specs slot 0))
+      )
+    )(T (error "~S --> classe inesistente!" class-name))))
+
+
+
+; Funzione searchParents: controlla che la classe abbia parents e, in tal
+; caso, copia gli attributi delle classi genitore nell'istanza
+(defun searchParents (class-name instanceList)
+  (cond
+   ((not (null class-name))
+    (let ((parents (second (get-class-spec class-name))))
+      (cond ((atom parents)
+             (append
+              (cond
+               ((null parents)
+                (cond ((atom class-name)
+                      (copySlotsInIstance (searchParents parents instanceList)
+                                          (car (last (get-class-spec class-name)))
+                                    0))
+                      (t (copySlotsInIstance (searchParents parents instanceList)
+                                             (car (last (get-class-spec (car class-name))))
+                                    0))                
+                      )
+                
+                )
+               (T (copySlotsInIstance instanceList
+                                      (car (last (get-class-spec parents)))
+                                      0))
+               )
+              )
+             )
+             ((eql (length parents) 1)
+              (append 
+               (copySlotsInIstance (searchParents (car parents) instanceList)
+                                   (car (last (get-class-spec (car parents))))
+                                   0)
+               ))
+             (t (append (searchParents (first parents) instanceList) 
+                        (searchParents (rest parents) instanceList))
+                )
+             )
+      )
+    )
+   )
   )
+
+
+
+; Funzione copySlotsInIstance: copia attributi e metodi della classe
+; genitore in quelli della classe figlio
+(defun copySlotsInIstance (instanceList slot slotCount)
+    (cond ((< slotCount (length slot))
+    ; lista slot: in pos. slotCount ho il nome dello slot, in pos.
+    ; slotCount+1 ho il relativo valore
+    ; proseguo con 'attributo'/metodo successivo
+         (copySlotsInIstance 
+          (setParValue instanceList 
+                       (nth slotCount slot) 
+                       (nth (+ 1 slotCount) slot)
+                       0)
+          slot 
+          (+ 2 slotCount)))
+    ; ritorno la lista
+        (T instanceList)))
+
+
+
+; Funzione setParValue: inserisce attributi parent in istanza
+(defun setParValue (instanceList slot-name slot-value contSlotParents)
+  (cond 
+   ((equal (nth contSlotParents instanceList) slot-name)
+    ; sostituisco val. default con val. istanza deciso da utente:
+    (listReplace instanceList (+ 1 contSlotParents) slot-value)
+    ; altrimenti proseguo nella ricerca (ammesso che cont < length)
+    )(T (cond ((< (+ 2 contSlotParents) (length instanceList))
+               (setParValue instanceList 
+                            slot-name 
+                            slot-value 
+                            (+ 2 contSlotParents)))
+              ; se arrivo qui, significa che lo slot non c'era in eventuali padri:
+              ; faccio la append e inserisco l'attributo/metodo
+              (T (append instanceList (list slot-name slot-value)))
+        ))))
+
 
 
 ; Funzione checkSlot: verifica esistenza nomi slot istanza, e sostituisce
@@ -184,7 +269,7 @@
     ; proseguo con 'attributo' successivo
          (checkSlot instanceList slot (+ 2 slotCount)))
   ; ritorno la lista
-        (T instancelist)))
+        (T instanceList)))
 
 
 
@@ -198,7 +283,7 @@
     ; altrimenti proseguo nella ricerca (ammesso che cont < length)
     )(T (cond ((< (+ 2 contSlotInstance) (length instanceList))
                (setInstVal instanceList slot-name slot-value (+ 2 contSlotInstance)))
-              (T (error "~S --> attributo non esistente!" slot-name))
+              (T (error "~S --> attributo inesistente!" slot-name))
         ))))
 
 
@@ -207,7 +292,7 @@
 (defun listReplace (list n elem)
   (cond
    ((null list) ())
-   ((= n 0) (cons elem list))
+   ((= n 0) (cons elem (cdr list)))
    (t (cons (car list) (listReplace (cdr list) (1- n) elem)))))
 			 
 			 
@@ -226,7 +311,7 @@
 (defun check-getv (instance slot-name) 
   (cond 
    ((not (equal (car instance) 'OOLINST)) (error "Non inizia con oolinst"));check instance
-   ((not (symbolp slot-name)) (print "Errore: slot-name non Ã¨ un simbolo"));check slot name=simbolo
+   ((not (symbolp slot-name)) (print "Errore: slot-name non e' un simbolo"));check slot name=simbolo
    )
   )
 
