@@ -206,12 +206,12 @@
       ; class-name è una lista: allora
       ; richiamo questa funzione sul primo e sul resto dei
       ; parent, sostituendo a mano a mano i risultati
-     (T	(copySlotsInIstance
-         (copySlotsInIstance instanceList
-                             (car (last (get-class-spec (car class-name))))
-                             0)
-         (searchParents (rest class-name) instanceList)
-         0))))))
+     (T	(copySlotsInIstance (copySlotsInIstance
+                               (searchParents (first class-name) instanceList)
+                               (searchParents (rest class-name) instanceList)
+                               0)
+                              (car (last (get-class-spec class-name)))
+                              0))))))
 
 
 
@@ -394,4 +394,11 @@
 (def-class 'due nil 'attdue :dueAtt)	
 (def-class 'tre nil 'atttre :treAtt)	
 (def-class 'quattro nil 'attquattro :quattroAtt)
-(def-class 'primi4 '(uno due tre quattro) 'valore :siamoIPrimi4)	
+(def-class 'primi4 '(uno due tre quattro) 'valore :siamoIPrimi4)
+
+(def-class 'person () :age 42 :name "Lilith")
+(def-class 'superhero '(person) :age 4092)
+(def-class 'doctor '(person))
+(def-class 'fictional-character '(person) :age 60)
+(def-class 'time-lord '(doctor superhero fictional-character))	
+(def-class 'student '(person) 'msg "Sono uno studente!")
