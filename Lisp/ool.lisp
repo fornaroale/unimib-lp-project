@@ -351,9 +351,7 @@
    ((not (equal (car instance) 'OOLINST)) (error "Non inizia con oolinst"))
    ((not (symbolp slot-name)) (error "Slot-name non e' un simbolo!"))
    ; verifico se i dati in input alla funzione siano corretti
-   (T (check-getv instance slot-name)
-      ; se lo sono ritorno l'elemento
-      (get-slot-value instance slot-name)))) 
+   (T (get-slot-value instance slot-name)))) 
 
 
 
@@ -409,9 +407,15 @@
 (def-class 'quattro nil 'attquattro :quattroAtt)
 (def-class 'primi4 '(uno due tre quattro) 'valore :siamoIPrimi4)
 
-(def-class 'person () :age 42 :name "Lilith")
+(def-class 'person () 'age 42 :name "Lilith")
 (def-class 'superhero '(person) :age 4092)
 (def-class 'doctor '(person))
 (def-class 'fictional-character '(person) :age 60)
 (def-class 'time-lord '(doctor superhero fictional-character))	
-(def-class 'student '(person) 'msg "Sono uno studente!")
+(def-class ’student ’(person)
+           ’name "Eva Lu Ator"
+           ’university "Berkeley"
+           ’talk ’(=> ()
+                      (list
+                              (list (getv this ’name))
+                              (getv this ’age))))
