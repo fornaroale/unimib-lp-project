@@ -164,60 +164,63 @@
             class-name
             (second (get-class-spec class-name))
             (checkSlot (searchParents class-name
-                                      (first (last class-specs)))
+                                      ;(first (last class-specs)))
+                                      nil)
                        slot
                        0)))
     )(T (error "~S --> classe inesistente!" class-name))))
 
 
 
-; Funzione searchParents: controlla che la classe abbia parents e, in tal
-; caso, copia gli attributi delle classi genitore nell'istanza
+
+
+
+
 (defun searchParents (class-name instanceList)
-  (cond 
-   ; se la classe non e' ulla
+  (cond
+   ; se classe != null, cerco i parents
    ((not (null class-name))
-    ;mi salvo i parents della classe in parents
-    (let ((parents (second (get-class-spec class-name))))
-      (cond 
-       ;se parents e' un atomo
-       ((atom parents)
-        (append
-         (cond
-          ; ed e' null
-          ((null parents)
-           ; e la class name e' un atomo
-           (cond ((atom class-name)
-                  ;allora copio istanceList e gli attributi
-                  ;della classe su cui sono
-                  (copySlotsInIstance instanceList
-                                      (car (last (get-class-spec class-name)))
-                                      0))
-                 ; se la class-name non e' un atomo copio comunque i valori
-                 ; degli attributi della classe su cui sono
-                 (t (copySlotsInIstance (searchParents parents instanceList)
-                                        (car
-                                         (last 
-                                          (get-class-spec (car class-name))))
-                                        0))))
-          ; se la classe name non e' un atomo
-          ; copio gli attributi dei parents
-          (T (copySlotsInIstance instanceList
-                                 (car (last (get-class-spec parents)))
-                                 0)))))
-       ; se parents è una lista ma ha un solo elemento
-       ; copio gli attributi dei parents
-       ((eql (length parents) 1)
-        (append 
-         (copySlotsInIstance (searchParents (car parents) instanceList)
-                             (car (last (get-class-spec (car parents))))
-                             0)))
-       ; altrimenti, se parents non è un atomo 
-       ; richiamo ricorsivamente sul primo elemento
-       ; e sul resto dei parents
-       (t (append (searchParents (first parents) instanceList) 
-                  (searchParents (rest parents) instanceList))
-          ))))))
+    (cond
+     ; se class-name non è una lista:
+     ((not (listp class-name))
+      ; parents (locale) conterra' le classi genitore
+      (let ((parents (second (get-class-spec class-name))))
+        (cond
+         ((null parents)
+          ; se ha zero parents, ho raggiunto la cima:
+          ; copio gli attributi
+          (copySlotsInIstance instanceList
+                              (car (last (get-class-spec class-name)))
+                              0))
+         ((eql 1 (length parents))
+          ; se ha un solo parent allora entro nel parent con 
+          ; questo metodo e poi copio gli attributi della classe
+          ; in cui sono
+          (copySlotsInIstance (searchParents (first parents) instanceList)
+                              (car (last (get-class-spec class-name)))
+                              0))
+         (T 
+          ; altrimenti ha piu' parent, quindi richiamo
+          ; questa funzione sul primo e sul resto dei
+          ; parent, in caso di doppione tengo i valori
+          ; trovati per ultimi (grazie a copySlotInInstance)
+          (copySlotsInIstance (copySlotsInIstance
+                               (searchParents (first parents) instanceList)
+                               (searchParents (rest parents) instanceList)
+                               0)
+                              (car (last (get-class-spec class-name)))
+                              0)
+          ))))
+      ; class-name è una lista: allora
+      ; richiamo questa funzione sul primo e sul resto dei
+      ; parent, sostituendo a mano a mano i risultati
+     (T	(copySlotsInIstance
+         (copySlotsInIstance instanceList
+                             (car (last (get-class-spec (car class-name))))
+                             0)
+         (searchParents (rest class-name) instanceList)
+         0))))))
+
 
 
 
@@ -240,7 +243,7 @@
 
 
 
-; Funzione setParValue: inserisce attributi parent in istanza
+; Funzione setParValue: inserisce attributi parent (slot) in istanza
 (defun setParValue (instanceList slot-name slot-value contSlotParents)
   (cond 
    ((equal (nth contSlotParents instanceList) slot-name)
