@@ -3,11 +3,13 @@
 (defparameter *classes-specs* (make-hash-table))
 
 
+
 ; definizioni metodi getter and setter per l'association list
 (defun add-class-spec (name class-spec)
   (setf (gethash name *classes-specs*) class-spec))
 (defun get-class-spec (name)
   (gethash name *classes-specs*))
+
 
 
 ; definizione del metodo defun-class
@@ -26,6 +28,8 @@
                              )	
              class-name)))
 
+
+
 ;gestione attributi
 (defun gestione-attributi (par slot)
   (cond
@@ -37,6 +41,8 @@
       )
      )
    ((not (null slot))(verificaR slot (length slot)))))
+
+
 
 ;controlla esistenza parents
 (defun esistePar (listaP)
@@ -52,6 +58,8 @@
                 (esistePar (rest listaP))))
   ))
 
+
+
 ; da cancellare INUTILIZZTA
 (defun form (par slot)
 	;aggiungere la verifica che sia un metodo
@@ -62,6 +70,9 @@
                       (verificaR slot (length slot))))
 	)
   )
+
+
+
 ; da cancellare INUTILIZZATA
 (defun risolvi-par (par)
   (cond ((equal (length par) 0) nil)
@@ -70,10 +81,14 @@
         )
   )
 
+
+
 (defun concatena (x y)
   (append x y)
   ;(flatten (append x y))
   )
+
+
 
 ;--------
 (defun process-method (method-name method-spec)
@@ -85,6 +100,8 @@
     )
   (eval (rewrite-method-code method-name method-spec))
   )
+
+
 
 (defun rewrite-method-code (method-name method-spec)
   (cond ((not (symbolp method-name))    
@@ -111,12 +128,17 @@
         )
   )
 
+
+
 (defun verificaR (temp n) ;scorro 2 a 2 perche' una lista, e verifico chiamando verifica
   (cond ((equal n 0) nil)
         (T (append (verifica (subseq temp 0 2))
                    (verificaR (subseq temp 2 n) (- n 2))))
         )
   )
+
+
+
 (defun verifica (temp)
   (cond ((and (listp (car(cdr temp))); se il corpo e' una lista
               (equalp '=> (car(car(cdr temp))))); se trovo il simbolo di metodo, e' un metodo
@@ -130,6 +152,9 @@
         (T temp) 
         )
   )
+
+
+
 ;--------
 ;forse inutile
 (defun appendi (l1 l2)
@@ -212,7 +237,6 @@
                                0)
                               (car (last (get-class-spec class-name)))
                               0))))))
-
 
 
 
@@ -308,6 +332,7 @@
 )
 
 
+
 ; Funzione per sostituzione n-esimo valore di una lista con 'elem'
 (defun listReplace (list n elem)
   (cond
@@ -321,40 +346,28 @@
 ;Se esiste, verifico che slot-name sia un simbolo
 ;Se e' tutto okay, calcolo il valore dell'attributo richiesto richiamando la funzione get-slot-value
 (defun getv (instance slot-name) ;instance -> lista slot-name(campo) -> simbolo
-  (cond 
-   (T (check-getv instance slot-name) ;verifico se i dati in input alla funzione siano corretti
-    (get-slot-value instance slot-name)))) ;se lo sono ritorno l'elemento
+  (cond
+   ;check instance
+   ((not (equal (car instance) 'OOLINST)) (error "Non inizia con oolinst"))
+   ((not (symbolp slot-name)) (error "Slot-name non e' un simbolo!"))
+   ; verifico se i dati in input alla funzione siano corretti
+   (T (check-getv instance slot-name)
+      ; se lo sono ritorno l'elemento
+      (get-slot-value instance slot-name)))) 
 
 
 
-(defun check-getv (instance slot-name) 
-  (cond 
-   ((not (equal (car instance) 'OOLINST)) (error "Non inizia con oolinst"));check instance
-   ((not (symbolp slot-name)) (error "Slot-name non e' un simbolo!"))));check slot name=simbolo
-
-
-
-(defun get-slot-value (instance slot-name);recupera attributo richiesto
+; Funzione get-slot-value: recupera attributo richiesto
+(defun get-slot-value (instance slot-name)
   ;prende l'elemento alla posizione successiva rispetto al nome dell'attributo, dalla 
   ;sottolista contenuta nel'instanza in cui sono contenuti tutti gli attributi
- (nth (+ 1 (getPos slot-name (first (last instance)))) 
-      (first (last instance))))
-
-
-
-(defun getPos (el l) ;ritorna la posizione di un dato elemento in una lista
   (cond 
-   ((null l)(error "Attributo non presente!"))
-   ((eql (car l) el) 0)
-   (T (+ 1 (cond
-            ((not (null (cdr l))) (getPos el (rest l)))
-            (t (getPos el '()))
-            )
-         )
-      )
-   )
-  )
-			 
+   ((not (null (position slot-name (first (last instance)))))
+    (nth (+ 1 (position slot-name (first (last instance))))
+         (first (last instance))))
+   (T (error "~S --> Attributo non presente!" slot-name))
+   ))
+		 
 
 
 ;getvx deve ritornare una lista contenente l'elenco di valori richiesti dall'utente
@@ -363,12 +376,12 @@
   (cond 
    ((not (null (car slot-name))) 
     (append (list (getv instance (car slot-name))) 
-             (getvx instance (car (rest slot-name)))))
-   )
-  )
+            (getvx instance (car (rest slot-name)))))))
 
 
-	 
+
+
+
 ;; test input
 
 (def-class 'protoni nil 'attrProtoni "prova protoni")
