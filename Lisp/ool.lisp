@@ -152,27 +152,19 @@
 
 
 
-
-
-
 ; Funzione new: ritorna lista contenente valori di istanza
 (defun new (class-name &rest slot) ;<-- slot = lista di attributi di classe
   (cond
    ((get-class-spec class-name)  ; verifico esistenza classe
-    (let ((class-specs (copy-tree (get-class-spec class-name))))
-      (list 'oolinst
-            class-name
-            (second (get-class-spec class-name))
-            (checkSlot (searchParents class-name
-                                      ;(first (last class-specs)))
-                                      nil)
-                       slot
-                       0)))
+    (list 'oolinst
+          class-name
+          (second (get-class-spec class-name))
+          (searchForMethods (checkSlot (searchParents class-name
+                                                      nil)
+                                       slot
+                                       0)
+                            0))
     )(T (error "~S --> classe inesistente!" class-name))))
-
-
-
-
 
 
 
@@ -290,14 +282,30 @@
     ; sostituisco val. default con val. istanza deciso da utente:
     (listReplace instanceList (+ 1 contSlotInstance) slot-value)
     ; altrimenti proseguo nella ricerca (ammesso che cont < length)
-    )(T (cond ((< (+ 2 contSlotInstance) (length instanceList))
-               (setInstVal instanceList
-                           slot-name
-                           slot-value 
-                           (+ 2 contSlotInstance)))
-              (T (error "~S --> attributo inesistente!" slot-name))
-        ))))
+    )(T (cond 
+         ((< (+ 2 contSlotInstance) (length instanceList))
+          (setInstVal instanceList
+                      slot-name
+                      slot-value 
+                      (+ 2 contSlotInstance)))
+         (T (error "~S --> attributo inesistente!" slot-name))))))
 
+
+
+; Funzione searchForMethods: richiama process-method su eventuali metodi
+; slotList: e' la lista dell'istanza
+; slotCount: contatore usato per muoversi nell'istanza
+(defun searchForMethods (slotList slotCount)
+  (cond ((< slotCount (length slotList))
+         ; se e' una funzione richiamo la process method
+         (cond
+          ((functionp (nth (+ 1 slotCount) slotList))
+           (process-method (nth slotCount slotList)
+                           (nth (+ 1 slotCount) slotList))))
+         (searchForMethods slotList (+ 2 slotCount))
+         slotList
+  ))
+)
 
 
 ; Funzione per sostituzione n-esimo valore di una lista con 'elem'
