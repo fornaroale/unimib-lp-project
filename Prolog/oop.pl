@@ -13,12 +13,14 @@
 % che non ci possonon essere due classi con lo stesso nome, di
 % conzeguenza posso avere un unico predicato del tipo class(NomeClasse)
 % riferito a una singola classe.
+  
 def_class(NomeClasse, Parents, Values):-
   is_listOf_atom(Parents),
   not(class(NomeClasse)), %funziona solo se all'inizio dichiari un predicato class a caso e poi puoi anche rimuoverlo.
   assert(class(NomeClasse)),
   assert(superclass(NomeClasse, Parents)),
-  assert(slot_value_in_class(NomeClasse, Values)). %da modificare
+  %split_value(Values, List_Value_Method), da sistemare
+  assert(slot_value_in_class(NomeClasse, Values/*List_Value_Method*/)). %da modificare
 
 
 %Verifica se la lista passata come parametro contiene solo atomi
@@ -29,7 +31,10 @@ is_listOf_atom([]).
 is_listOf_atom([H|T]) :-
         atom(H), is_listOf_atom(T).
 
-%Funziona ma devo ancora capire come sfruttarlo
+%Funziona anche con la lista values splittata con split_value
+%Input: [=,nome,lele,=,anni,20,=,saluta,method([],saluta(salve))]
+%Result: X = [method([], saluta(salve))]
+
 extract_method([],[]).
 extract_method([H|_], [H]):-
     (functor(H, method, _)).
@@ -37,7 +42,23 @@ extract_method([H|T], [T1]):-
     not((functor(H, method, _))),
     extract_method(T, [T1]).
 
+split_value([], X):-  print(X), break. % L'ho scritto così per vedere se almeno la stampa, e infatti funziona, 
+									   % ma non mi ritorna davvero la lista, la stampa e basta
 
+split_value([H|T], X):-
+  H =.. L,
+  %append(R, L, [L|R]),
+  append(X, L, R1),
+  split_value(T, R1).
+
+new(NomeCl, NomeIstanza, Values):-
+  class(NomeCl),
+  assert(instance_of(nomeCl, NomeIstanza, Values)).
+
+new(NomeIstanza, NomeCl) :- new(NomeCl, NomeIstanza, []).
+
+  
+	
 %non l'ho usato ma può tornare utile
 is_alist(X) :-
         var(X), !,
