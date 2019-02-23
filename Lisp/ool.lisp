@@ -95,7 +95,7 @@
   (setf (fdefinition method-name)
     (lambda (this &rest args)
       (apply (getv this method-name)
-             (append '(this) args)
+             (append (list this) args)
              ))
     )
   (eval (rewrite-method-code method-name method-spec))
@@ -115,11 +115,11 @@
                                 (cond ((and (listp (car method-spec)) ;se i parametri del metodo sono una lista
                                             (not (equalp 
                                                   'this (car (car method-spec))))) ; e non ho gia la this
-                                       (append '(this) (car method-spec))) ;allora aggiungo la this
+                                       (append (list 'this) (car method-spec))) ;allora aggiungo la this
                                       (T (car method-spec)) ;e ritorno tutti i parametri
                                       )
                                 ))
-                             (T  '(this)) ;altrimenti se non ci sono aggiungo solamente la this e ritorno
+                             (T  (list 'this)) ;altrimenti se non ci sono aggiungo solamente la this e ritorno
                              )
                       )
                  (cdr method-spec) ;aggiungo in coda a lambda e ai parametri, la funzione
@@ -407,15 +407,15 @@
 (def-class 'quattro nil 'attquattro :quattroAtt)
 (def-class 'primi4 '(uno due tre quattro) 'valore :siamoIPrimi4)
 
-;(def-class 'person () 'age 42 :name "Lilith")
+(def-class 'person () 'age 42 :name "Lilith")
 ;(def-class 'superhero '(person) :age 4092)
 ;(def-class 'doctor '(person))
 ;(def-class 'fictional-character '(person) :age 60)
 ;(def-class 'time-lord '(doctor superhero fictional-character))	
-;(def-class ’student ’(person)
-;           ’name "Eva Lu Ator"
-;           ’university "Berkeley"
-;           ’talk ’(=> ()
-;                      (list
-;                              (list (getv this ’name))
-;                              (getv this ’age))))
+(def-class ’student ’(person)
+           ’name "Eva Lu Ator"
+           ’university "Berkeley"
+           ’talk ’(=> ()
+                      (list
+                              (list (getv this ’name))
+                              (getv this ’age))))
