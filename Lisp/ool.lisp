@@ -7,6 +7,7 @@
 ; definizioni metodi getter and setter per l'association list
 (defun add-class-spec (name class-spec)
   (setf (gethash name *classes-specs*) class-spec))
+
 (defun get-class-spec (name)
   (gethash name *classes-specs*))
 
@@ -19,14 +20,16 @@
 (defun def-class (class-name parents &rest slot-value)
   ;controlli
   (cond ((get-class-spec class-name) 
-         (format *error-output* "errore, classe gia presente"))
-        ((listp class-name) (format *error-output* "il nome classe non puï¿½ essere una lista"))
-        ((and (not (null parents)) (atom parents)) (format *error-output* "errore, la classe parent deve essere una lista"))
+         (error "~S --> classe gia presente" class-name) )
+        ((listp class-name) (error "il nome classe non puo' essere una lista"))
+        ((and (not (null parents)) (atom parents)) 
+         (error "errore, la classe parent deve essere una lista"))
         (T 
-             (add-class-spec class-name
-                             (list class-name parents (gestione-attributi parents slot-value))
-                             )	
-             class-name)))
+         (add-class-spec class-name
+                         (list class-name parents 
+                               (gestione-attributi parents slot-value))
+                         )	
+         class-name)))
 
 
 
@@ -34,12 +37,9 @@
 (defun gestione-attributi (par slot)
   (cond
    ((not(null par)) 
-     (cond
-      ((not (esistePar par)) (error "una o piu classi padre non esiste"))
-      ((not (null slot))(verificaR slot (length slot)))
-      ;(t nil)
-      )
-     )
+    (cond
+     ((not (esistePar par)) (error "una o piu classi padre non esiste"))
+     ((not (null slot))(verificaR slot (length slot)))))
    ((not (null slot))(verificaR slot (length slot)))))
 
 
@@ -48,60 +48,19 @@
 (defun esistePar (listaP)
   (cond ((atom listaP) 
          (cond ((get-class-spec listaP) T)
-               (t nil))
-         )
+               (t nil)))
         ((eql (length listaP) 1) 
          (cond ((get-class-spec (car listaP)) T)
-               (t nil))
-         )
+               (t nil)))
         (t (and (esistePar (first listaP)) 
-                (esistePar (rest listaP))))
-  ))
+                (esistePar (rest listaP))))))
 
-
-
-; da cancellare INUTILIZZTA
-(defun form (par slot)
-	;aggiungere la verifica che sia un metodo
-  (cond ((and (null par) (null slot)) nil)
-	((null par) (verificaR slot (length slot)))
-	((null slot) (risolvi-par par))
-	(T (concatena (risolvi-par par) 
-                      (verificaR slot (length slot))))
-	)
-  )
-
-
-
-; da cancellare INUTILIZZATA
-(defun risolvi-par (par)
-  (cond ((equal (length par) 0) nil)
-        ((append (first(rest(rest(get-class-spec (first par))))) 
-                 (risolvi-par (rest par))))
-        )
-  )
-
-
-
-(defun concatena (x y)
-  (append x y)
-  ;(flatten (append x y))
-  )
-
-
-
-;--------
 (defun process-method (method-name method-spec)
   (setf (fdefinition method-name)
-    (lambda (this &rest args)
-      (apply (getv this method-name)
-             (append (list this) args)
-             ))
-    )
-  (eval (rewrite-method-code method-name method-spec))
-  )
-
-
+        (lambda (this &rest args)
+          (apply (getv this method-name)
+                 (append (list this) args))))
+  (eval (rewrite-method-code method-name method-spec)))
 
 (defun rewrite-method-code (method-name method-spec)
   (cond ((not (symbolp method-name))    
@@ -116,27 +75,15 @@
                                             (not (equalp 
                                                   'this (car (car method-spec))))) ; e non ho gia la this
                                        (append (list 'this) (car method-spec))) ;allora aggiungo la this
-                                      (T (car method-spec)) ;e ritorno tutti i parametri
-                                      )
-                                ))
-                             (T  (list 'this)) ;altrimenti se non ci sono aggiungo solamente la this e ritorno
-                             )
-                      )
-                 (cdr method-spec) ;aggiungo in coda a lambda e ai parametri, la funzione
-                 )
-         )
-        )
-  )
-
+                                      (T (car method-spec)))));e ritorno tutti i parametri
+                             (T  (list 'this))));altrimenti se non ci sono aggiungo solamente la this e ritorno
+                 (cdr method-spec)))));aggiungo in coda a lambda e ai parametri, la funzione
 
 
 (defun verificaR (temp n) ;scorro 2 a 2 perche' una lista, e verifico chiamando verifica
   (cond ((equal n 0) nil)
         (T (append (verifica (subseq temp 0 2))
-                   (verificaR (subseq temp 2 n) (- n 2))))
-        )
-  )
-
+                   (verificaR (subseq temp 2 n) (- n 2))))))
 
 
 (defun verifica (temp)
@@ -145,36 +92,8 @@
          (append (list (car temp))
                  (list (process-method
                         (car temp)
-                        (cdr (car (cdr temp))))
-                       )
-                 )
-         )
-        (T temp) 
-        )
-  )
-
-
-
-;--------
-;forse inutile
-(defun appendi (l1 l2)
-  (cond ((null l1) l2)
-        (T (list (first l1) (appendi (rest l1) l2))))
-  )
-
-;forse inutile
-(defun flatten (x)
-  (cond ((null x) x)
-        ((atom x) (list x))
-        (T (append (flatten (first x))
-                   (flatten (rest x)))))
-  )
-
-;(defun verifica (x)
-	;implementare riconoscimento dei metodi
-;  (progn x)
-;)
-
+                        (cdr (car (cdr temp)))))))
+        (T temp)))
 
 
 ; Funzione new: ritorna lista contenente valori di istanza
@@ -184,11 +103,11 @@
     (list 'oolinst
           class-name
           (second (get-class-spec class-name))
-          (searchForMethods (checkSlot (searchParents class-name
-                                                      nil)
-                                       slot
-                                       0)
-                            0))
+          (searchForMethods 
+           (checkSlot 
+            (searchParents class-name nil)
+            slot 0)
+           0))
     )(T (error "~S --> classe inesistente!" class-name))))
 
 
@@ -226,8 +145,7 @@
                                (searchParents (rest parents) instanceList)
                                0)
                               (car (last (get-class-spec class-name)))
-                              0)
-          ))))
+                              0)))))
       ; class-name è una lista: allora
       ; richiamo questa funzione sul primo e sul resto dei
       ; parent, sostituendo a mano a mano i risultati
@@ -273,8 +191,7 @@
                             (+ 2 contSlotParents)))
               ; se arrivo qui, significa che lo slot non c'era in eventuali
               ; padri: faccio la append e inserisco l'attributo/metodo
-              (T (append instanceList (list slot-name slot-value)))
-        ))))
+              (T (append instanceList (list slot-name slot-value)))))))
 
 
 
@@ -327,9 +244,7 @@
            (process-method (nth slotCount slotList)
                            (nth (+ 1 slotCount) slotList))))
          (searchForMethods slotList (+ 2 slotCount))
-         slotList
-  ))
-)
+         slotList)))
 
 
 
@@ -363,8 +278,7 @@
    ((not (null (position slot-name (first (last instance)))))
     (nth (+ 1 (position slot-name (first (last instance))))
          (first (last instance))))
-   (T (error "~S --> Attributo non presente!" slot-name))
-   ))
+   (T (error "~S --> Attributo non presente!" slot-name))))
 		 
 
 
@@ -374,10 +288,7 @@
   (cond 
    ((not (null (car slot-name))) 
     (append (list (getv instance (car slot-name))) 
-            (getvx instance (car (rest slot-name)))))))
-
-
-
+            (getvx instance (rest slot-name))))))
 
 
 ;; test input
@@ -408,10 +319,7 @@
 (def-class 'primi4 '(uno due tre quattro) 'valore :siamoIPrimi4)
 
 (def-class 'person () 'age 42 :name "Lilith")
-;(def-class 'superhero '(person) :age 4092)
-;(def-class 'doctor '(person))
-;(def-class 'fictional-character '(person) :age 60)
-;(def-class 'time-lord '(doctor superhero fictional-character))	
+	
 (def-class ’student ’(person)
            ’name "Eva Lu Ator"
            ’university "Berkeley"
@@ -419,21 +327,27 @@
                       (list
                               (list (getv this ’name))
                               (getv this ’age))))
-(def-class 'p-complex nil
-           :phi 0.0
-           :rho 1.0
-           'sum '(=> (pcn)
-                     (list (getv this :rho)
-                           (getv this :phi)
-                           (getv pcn :rho)
-                           (getv pcn :phi)
-                           )))
+;(def-class 'p-complex nil
+;           :phi 0.0
+;           :rho 1.0
+;           'sum '(=> (pcn)
+;                     (list (getv this :rho)
+;                           (getv this :phi)
+;                           (getv pcn :rho)
+;                           (getv pcn :phi)
+;                           )))
 
-(def-class ’studente-bicocca ’(student)
-           ’talk ’(=> ()
-                      (princ "Mi chiamo ")
-                      (princ (getv this ’name))
-                      (terpri)
-                      (princ "e studio alla Bicocca.")
-                      (terpri))
-           ’university "UNIMIB")
+;(def-class ’studente-bicocca ’(student)
+;           ’talk ’(=> ()
+;                      (princ "Mi chiamo ")
+;                      (princ (getv this ’name))
+;                      (terpri)
+;                      (princ "e studio alla Bicocca.")
+;                      (terpri))
+;           ’university "UNIMIB")
+
+;(def-class 'person () :age 42 :name "Lilith")
+;(def-class 'superhero ’(person) :age 4092)
+;(def-class 'doctor ’(person))
+;(def-class 'fictional-character ’(person) :age 60)
+;(def-class 'time-lord ’(doctor superhero fictional-character))
