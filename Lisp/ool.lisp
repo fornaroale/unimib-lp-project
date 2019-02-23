@@ -284,11 +284,22 @@
 
 ;getvx deve ritornare una lista contenente l'elenco di valori richiesti dall'utente
 ;prendo il primo elemento
-(defun getvx (instance &rest slot-name)
+(defun getvxOLD (instance &rest slot-name)
   (cond 
    ((not (null (car slot-name))) 
     (append (list (getv instance (car slot-name))) 
             (getvx instance (rest slot-name))))))
+
+(defun getvx (instance &rest slot-name)
+  (cond 
+   ((null (car slot-name)) nil)
+   ;((atom slot-name)(getv instance slot-name))
+   ((and (equal (length slot-name) 1) (atom (car slot-name))) (getv instance (car slot-name)))
+   ((and (equal (length slot-name) 1) (listp (car slot-name))) (append (list (getv instance (car (car slot-name)))) 
+                                                                       (getvx instance (rest (car slot-name)))))
+   (t (append (list (getv instance (car slot-name))) (getvx instance (rest slot-name))))
+   )
+)
 
 
 ;; test input

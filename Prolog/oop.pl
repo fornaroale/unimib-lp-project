@@ -1,4 +1,4 @@
-%% -*- Mode: Prolog -*-
+﻿%% -*- Mode: Prolog -*-
 % Metodo di base, verifica se parents e' una lista di simboli come
 % richiesto, se la condizione e' verificata aggiunge alla base di
 % conoscenza i predicati:
@@ -13,7 +13,7 @@
 % che non ci possonon essere due classi con lo stesso nome, di
 % conzeguenza posso avere un unico predicato del tipo class(NomeClasse)
 % riferito a una singola classe.
-  
+
 def_class(NomeClasse, Parents, Values):-
   is_listOf_atom(Parents),
   not(class(NomeClasse)), %funziona solo se all'inizio dichiari un predicato class a caso e poi puoi anche rimuoverlo.
@@ -42,7 +42,7 @@ extract_method([H|T], [T1]):-
     not((functor(H, method, _))),
     extract_method(T, [T1]).
 
-split_value([], X):-  print(X), break. % L'ho scritto così per vedere se almeno la stampa, e infatti funziona, 
+split_value([], X):-  print(X), break. % L'ho scritto così per vedere se almeno la stampa, e infatti funziona,
 									   % ma non mi ritorna davvero la lista, la stampa e basta
 
 split_value([H|T], X):-
@@ -57,8 +57,8 @@ new(NomeCl, NomeIstanza, Values):-
 
 new(NomeIstanza, NomeCl) :- new(NomeCl, NomeIstanza, []).
 
-  
-	
+
+
 %non l'ho usato ma può tornare utile
 is_alist(X) :-
         var(X), !,
