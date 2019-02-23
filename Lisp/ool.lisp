@@ -390,7 +390,7 @@
 (def-class 'muschio '(molecole neutrini) 'piangi '(=> () (write "weee")) 'stato "vita")
 (def-class 'ecosistema '(muschio) :stato :vita)
 (def-class 'uomo '(molecole) 'nome "unbound" :cognome :unbound)
-(def-class 'citta '(uomo) 'nomeCitta :unbound)
+(def-class 'citta '(uomo) 'nomeCitta :unbound 'Dati '(=> () (list (getv this 'nomeCitta) (getv this 'nome) (getvx this :cognome 'attrProtoni))))
 (def-class 'pianeta '(citta ecosistema) 'nomeSistema 'terra)
 
 (def-class 'a nil 'nome "lettera")
@@ -419,3 +419,21 @@
                       (list
                               (list (getv this ’name))
                               (getv this ’age))))
+(def-class 'p-complex nil
+           :phi 0.0
+           :rho 1.0
+           'sum '(=> (pcn)
+                     (list (getv this :rho)
+                           (getv this :phi)
+                           (getv pcn :rho)
+                           (getv pcn :phi)
+                           )))
+
+(def-class ’studente-bicocca ’(student)
+           ’talk ’(=> ()
+                      (princ "Mi chiamo ")
+                      (princ (getv this ’name))
+                      (terpri)
+                      (princ "e studio alla Bicocca.")
+                      (terpri))
+           ’university "UNIMIB")
