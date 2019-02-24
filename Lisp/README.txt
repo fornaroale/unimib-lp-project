@@ -1,3 +1,7 @@
+﻿ - ool.lisp versione finita e  pronta da consegnare
+ - ool-EsecuzioneCorretta.lisp versione finita
+ - ool-old.lisp oramai inutile, ma tenuta perchè una delle prime versioni, non funziona correttamente
+
 (defun def-class ( nome parents &rest campi))
 ;Verifica se la classe è presente nella classes-list -> richiama get-class-spec
 ;se è presente, non l'aggiunge e restituisce il messaggio di errore 
