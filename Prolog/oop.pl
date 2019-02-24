@@ -29,6 +29,7 @@ countInstances(InstanceName, Count) :-
 def_class(ClassName, Parents, SlotValues) :-
     countClasses(ClassName, Count),
     Count is 0, !,
+    existSuperClasses(Parents),
     assertz(class(ClassName)),
     defSuperClasses(ClassName, Parents),
     defClassSlots(ClassName, SlotValues).
@@ -44,11 +45,10 @@ def_class(ClassName, _, _) :-
 
 % defSuperClasses/2: definisce le superclassi di una classe
 defSuperClasses(_, []) :- !.
-defSuperClasses(ClassName, [H]) :-
-    assertz(superclass(H, ClassName)).
 defSuperClasses(ClassName, [H|T]) :-
-    assertz(superclass(H, ClassName)),
-    defSuperClasses(ClassName, T).
+    existClass(ClassName),
+    defSuperClasses(ClassName, T),
+    assertz(superclass(H, ClassName)).
 
 
 % defClassSlots/2: definisce gli attributi di una classe
@@ -59,6 +59,20 @@ defClassSlots(ClassName, [X,Y]) :-
 defClassSlots(ClassName, [X,Y|T]) :-
     assertz(slot_value_in_class(X, Y, ClassName)),
     defClassSlots(ClassName, T).
+
+
+% existSuperClasses/1: controlla che i parents esistano
+existSuperClasses([]) :- !.
+existSuperClasses([H|T]) :-
+    countClasses(H, Count),
+    Count > 0, !,
+    existSuperClasses(T).
+
+
+% existClass/1: controlla che la classe esista
+existClass(ClassName) :-
+    countClasses(ClassName, Count),
+    Count > 0.
 
 
 % new/2: richiama new/3
@@ -95,6 +109,61 @@ new(InstanceName, ClassName, _) :-
     write(ClassName),
     write("'."),
     fail.
+
+
+% generateInstanceSlots/2: genera la lista di slot contenente gli
+% attributi della classe e dei parent
+generateInstanceSlots(ClassName, ParentsValues) :-
+    % estraggo gli attributi dalla classe
+    getClassSlots(ClassName, ClassSlots),
+    % mi assicuro che abbia dei parents
+    hasParents(ClassName, Parents), !,
+    % estraggo gli attributi dai parents
+    getParentsSlots(Parents, ParentsSlots),
+    % append tra lista attributi classe e parents
+    append(ParentsSlots, ClassSlots, ParentsValues).
+    % DA FARE: rimuovo duplicati
+    %delDuplicates(ParentsValues)
+    % DA FARE: aggiungere attributi utente
+    %............
+
+
+% !!! DA FARE:
+% delDuplicates/1: rimuove dalla lista di attributi della classe
+% e dei parenti i doppioni, in modo che rimanga il solo valore della
+% prima definizione di ogni attributo (come da specifiche PDF)
+%delDuplicates([First|Rest]) :-
+%    indexOf(Rest, First, Index), !,
+%    delDuplicates(Rest).
+%
+%delDuplicates
+
+
+% generateInstanceSlots/2 per classe che non ha parents:
+generateInstanceSlots(ClassName, ParentsValues) :-
+    % mi limito a ritornare gli attributi della classe
+    getClassSlots(ClassName, ParentsValues).
+
+
+% hasParents/1: controlla se la classe ha parents (altr. false)
+hasParents(ClassName, SuperClasses) :-
+    findall(SuperClass, superclass(SuperClass, ClassName), SuperClasses),
+    length(SuperClasses, Count),
+    Count > 0, !.
+
+
+% getParentsSlots/2: ritorna gli attributi dei parent
+getParentsSlots([SuperClass|OtherSC], ParentsSlots) :-
+    generateInstanceSlots(SuperClass, ParentsSlots),
+    getParentsSlots(OtherSC, ParentsSlots).
+getParentsSlots([], _).
+
+
+% getClassSlots/2: ritorna in una lista gli attributi della classe
+getClassSlots(ClassName, Slots) :-
+    findall([SlotName, SlotValue],
+            slot_value_in_class(SlotName, SlotValue, ClassName),
+            Slots).
 
 
 % defInstanceSlots/2: funzione momentanea per assegnamento
