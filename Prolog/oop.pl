@@ -15,14 +15,14 @@ countInstances(InstanceName, Count) :-
     length(Z, Count).
 
 
-% Definisce classe
+% def_class/3: definisce classe aggiungendola alla knowledge base
 def_class(ClassName, Parents, SlotValues) :-
     countClasses(ClassName, Count),
     Count is 0, !,
     assertz(class(ClassName, Parents, SlotValues)).
 
 
-% def_class in caso di cut: restituisce errore
+% def_class/3 in caso di cut: restituisce errore
 def_class(ClassName, _, _) :-
     write("Errore: "),
     write(ClassName),
@@ -66,13 +66,20 @@ getv(InstanceName, SlotName, Result) :-
     getInstanceSlot(InstanceName, SlotName, Result).
 
 
-% getInstanceSlot: ritorna il valore di un attributo
-% MANCA: Controllo se l'elemento cercato non c'e'
+% getInstanceSlot/3: ritorna il valore di un attributo
+% (controllando che sia un nome e non un valore)
 getInstanceSlot(InstanceName, SlotName, SlotValue) :-
     getInstanceSlots(InstanceName, Slots),
-    indexOf(Slots, SlotName, Index),
-    ValueIndex is Index+1,
-    nth0(ValueIndex, Slots, SlotValue).
+    indexOf(Slots, SlotName, Index), !,
+    Index mod 2 =:= 0, !,
+    ValueIndex is Index + 1,
+    getElementAt(Slots, ValueIndex, SlotValue).
+
+
+% getInstanceSlot/3 in caso di cut
+getInstanceSlot(_,_,_) :-
+    write("Nome di attributo ricercato non presente."),
+    fail.
 
 
 % getInstanceSlots/2: ritorna la lista contenente gli
@@ -89,13 +96,25 @@ getInstanceSlots(InstanceName, Slots) :-
 getInstanceSlots(InstanceName, _) :-
     write("L'istanza di nome '"),
     write(InstanceName),
-    write("' non esiste.").
+    write("' non esiste."),
+    fail.
 
 
 % indexOf/3: ritorna posizione di elemento nella lista
+% Se non lo trova, ritorna false!
 indexOf([Element|_], Element, 0):- !.
 indexOf([_|Tail], Element, Index):-
   indexOf(Tail, Element, Index1),
   !,
-  Index is Index1+1.
+  Index is Index1 + 1.
 
+
+% getElementAt/3: ritorna l'elemento che si trova nella
+% posizione specificata nella lista
+getElementAt(Lista, Index, X) :-
+    getElementAt(Lista, 0, Index, X).
+getElementAt([X|_], N, N, X) :-
+    !.
+getElementAt([_|Xs], T, N, X) :-
+    T1 is T+1,
+    getElementAt(Xs, T1, N, X).
