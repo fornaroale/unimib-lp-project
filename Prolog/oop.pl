@@ -1,72 +1,101 @@
-﻿%% -*- Mode: Prolog -*-
-% Metodo di base, verifica se parents e' una lista di simboli come
-% richiesto, se la condizione e' verificata aggiunge alla base di
-% conoscenza i predicati:
-% class(NomeClasse) - superclass(Nomeclasse, [parents]),
-% slot_value_in_class(NomeClasse, Valori).
-%
-% In questo modosarà più semplice recuperare le informazioni avendo dei
-% predicati separati e usando il nome della classe come "chiave
-% principale"
-%
-% Verifica inoltre che la classe non sia già stata definita, assumendo
-% che non ci possonon essere due classi con lo stesso nome, di
-% conzeguenza posso avere un unico predicato del tipo class(NomeClasse)
-% riferito a una singola classe.
 
-def_class(NomeClasse, Parents, Values):-
-  is_listOf_atom(Parents),
-  not(class(NomeClasse)), %funziona solo se all'inizio dichiari un predicato class a caso e poi puoi anche rimuoverlo.
-  assert(class(NomeClasse)),
-  assert(superclass(NomeClasse, Parents)),
-  %split_value(Values, List_Value_Method), da sistemare
-  assert(slot_value_in_class(NomeClasse, Values/*List_Value_Method*/)). %da modificare
+% valori di default per evitare errori sulle count
+class(default, default, default).
+instance(default, default, default).
 
 
-%Verifica se la lista passata come parametro contiene solo atomi
-is_listOf_atom(X) :-
-        var(X), !,
-        fail.
-is_listOf_atom([]).
-is_listOf_atom([H|T]) :-
-        atom(H), is_listOf_atom(T).
+% conta il numero di classi aventi il nome passato per parametro
+countClasses(ClassName, Count) :-
+    findall(ClassName, class(ClassName,_,_), Z),
+    length(Z, Count).
 
-%Funziona anche con la lista values splittata con split_value
-%Input: [=,nome,lele,=,anni,20,=,saluta,method([],saluta(salve))]
-%Result: X = [method([], saluta(salve))]
-
-extract_method([],[]).
-extract_method([H|_], [H]):-
-    (functor(H, method, _)).
-extract_method([H|T], [T1]):-
-    not((functor(H, method, _))),
-    extract_method(T, [T1]).
-
-split_value([], X):-  print(X), break. % L'ho scritto così per vedere se almeno la stampa, e infatti funziona,
-									   % ma non mi ritorna davvero la lista, la stampa e basta
-
-split_value([H|T], X):-
-  H =.. L,
-  %append(R, L, [L|R]),
-  append(X, L, R1),
-  split_value(T, R1).
-
-new(NomeCl, NomeIstanza, Values):-
-  class(NomeCl),
-  assert(instance_of(nomeCl, NomeIstanza, Values)).
-
-new(NomeIstanza, NomeCl) :- new(NomeCl, NomeIstanza, []).
+% conta il numero di istanze aventi il nome passato per parametro
+countInstances(InstanceName, Count) :-
+    findall(InstanceName, instance(InstanceName,_,_), Z),
+    length(Z, Count).
 
 
-
-%non l'ho usato ma può tornare utile
-is_alist(X) :-
-        var(X), !,
-        fail.
-is_alist([]).
-is_alist([_|T]) :-
-    is_alist(T).
+% Definisce classe
+def_class(ClassName, Parents, SlotValues) :-
+    countClasses(ClassName, Count),
+    Count is 0, !,
+    assertz(class(ClassName, Parents, SlotValues)).
 
 
+% def_class in caso di cut: restituisce errore
+def_class(ClassName, _, _) :-
+    write("Errore: "),
+    write(ClassName),
+    write(" e' una classe gia' definita."),
+    fail.
 
+
+% new/2: richiama new/3
+new(InstanceName, ClassName) :-
+    new(InstanceName, ClassName, []), !.
+
+
+% new/3: aggiunge alla knowledge base l'istanza
+% MANCA: copia attributi classe e parents
+new(InstanceName, ClassName, SlotValues) :-
+    % controllo esistenza classe
+    countClasses(ClassName, CountClasses),
+    CountClasses is 1, !,
+    % controllo che non siano presenti istanze omonime
+    countInstances(InstanceName, CountInstances),
+    CountInstances is 0, !,
+    % creo l'istanza e scrivo messaggio di conferma
+    assertz(instance(InstanceName, ClassName, SlotValues)),
+    write("Istanza '"),
+    write(InstanceName),
+    write("' di classe '"),
+    write(ClassName),
+    write("' creata con successo").
+
+
+% new/3 in caso di cut: restituisce errore
+new(_, ClassName, _) :-
+    write("Errore: classe "),
+    write(ClassName),
+    write(" inesistente."),
+    fail.
+
+
+% getv/3: restituisce valore associato all'attributo
+getv(InstanceName, SlotName, Result) :-
+    getInstanceSlot(InstanceName, SlotName, Result).
+
+
+% getInstanceSlot: ritorna il valore di un attributo
+% MANCA: Controllo se l'elemento cercato non c'e'
+getInstanceSlot(InstanceName, SlotName, SlotValue) :-
+    getInstanceSlots(InstanceName, Slots),
+    indexOf(Slots, SlotName, Index),
+    ValueIndex is Index+1,
+    nth0(ValueIndex, Slots, SlotValue).
+
+
+% getInstanceSlots/2: ritorna la lista contenente gli
+% attributi contenuti nell'istanza
+getInstanceSlots(InstanceName, Slots) :-
+    countInstances(InstanceName, Count),
+    Count is 1, !,
+    instance(InstanceName,_,Slots),
+    length(Slots, SlotsLength),
+    SlotsLength > 0.
+
+
+% getInstanceSlots/2 in caso di cut
+getInstanceSlots(InstanceName, _) :-
+    write("L'istanza di nome '"),
+    write(InstanceName),
+    write("' non esiste.").
+
+
+% indexOf/3: ritorna posizione di elemento nella lista
+indexOf([Element|_], Element, 0):- !.
+indexOf([_|Tail], Element, Index):-
+  indexOf(Tail, Element, Index1),
+  !,
+  Index is Index1+1.
 
