@@ -131,7 +131,7 @@ list_methods([H|T], X):-
     append(Y, Z, X).
 
 
-% new/2: richiama new/3
+% New/2: Richiama new/3
 new(InstanceName, ClassName) :-
     new(InstanceName, ClassName, []), !.
 
@@ -230,6 +230,39 @@ defInstanceSlots(InstanceName, [X,Y]) :-
 defInstanceSlots(InstanceName, [X,Y|T]) :-
     assertz(slot_value_in_instance(X, Y, InstanceName)),
     defInstanceSlots(InstanceName, T).
+
+
+%%% scorro_e_sostituisco/3
+%%% Metodo che presa una lista come primo parametro ne
+%%% sostituisce i valori, lista nella forma
+%%% scorro_e_sostituisco([nome_attibuto_a, valore_a],
+%%% [nome_attributo_a,nuovo_valore_a], Out).
+%%% Out varra' [nome_attributo_a, nuovo_valore_a]
+scorro_e_sostituisco(Xds, [Xn, Yn], Out) :-
+    sostituisci(Xds, Xn, Yn, Ex),
+    append(Ex, [], Out).
+
+scorro_e_sostituisco(Xds, [Xn, Yn | Xns], Out) :-
+    sostituisci(Xds, Xn, Yn, Ex),
+    scorro_e_sostituisco(Ex, Xns, Out).
+
+
+
+%%% sostituisci/4
+%%% usato in scorri e sostituisci
+%%% sosituisci([nome_attibuto_a, valore_a], nome_attibuto_a,
+%%% nuovo_valore, Out).
+%%% Out varra' [nome_attibuto_a, nuovo_valore]
+sostituisci([Val1, _ | Xs], Val1, Val2,  [Val1, Val2 | Out]) :-
+    sostituisci(Xs, Val1, Val2, Out).
+
+sostituisci([X, Y | Xs], Val1, Val2, [X, Y | Out]) :-
+    sostituisci(Xs, Val1, Val2, Out).
+
+
+sostituisci([Val1, _Y], Val1, Val2, [Val1, Val2]).
+
+sostituisci([X, Y], _Val1, _Val2, [X, Y]).
 
 
 % getv/3: restituisce valore associato all'attributo
