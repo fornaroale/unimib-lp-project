@@ -74,7 +74,47 @@ existClass(ClassName) :-
     countClasses(ClassName, Count),
     Count > 0.
 
+% split_values/2: esegue lo split della lista iniziale
+% Input:[nome = 'lele', anni = 20, saluta = method([], saluta(salve))])
+% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, lele]
+split_values([], X) :-
+    append([], X, X).
+split_values([H|T], Z):-
+   H =.. Y,
+   split_values(T, X),
+   append(X, Y, Z).
 
+%remove_equals/3: rimuove il carattere uguale dalla lista, prendendo in
+% input la lista restituita da split_values.
+% Input: [=, saluta, method([], saluta(salve)), =, anni, 20, =, nome, lele]
+% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, lele]
+remove_equals([], X, X).
+remove_equals([X, Y, Z|T], L, W):-
+    X = '=',
+    remove_equals(T, [Y, Z], X1),
+    append(L, X1, W).
+
+
+%list_methods/2: estrae tutti i metodi dalla lista splittata
+%Input: [saluta, method([], saluta(salve)), anni, 20, nome, lele]
+%Result: X = [method([], saluta(salve))]
+extract_methods(W, []):-
+   %verifica se non è un predicato
+   not((functor(W, method, _))).
+extract_methods(W, [W]):-
+    %verifica se è un predicato "method(..)"
+    (functor(W, method, _)).
+
+% verifica se è un metodo, se si mi ritorna il metodo come lista,
+% altrimenti mi ritorna una lista vuota, infine fa un append per riunire
+% tutte le liste.
+list_methods([], []).
+list_methods([H|T], X):-
+    extract_methods(H, Z),
+    list_methods(T, Y),
+    append(Y, Z, X).	
+	
+	
 % new/2: richiama new/3
 new(InstanceName, ClassName) :-
     new(InstanceName, ClassName, []), !.
