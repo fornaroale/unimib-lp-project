@@ -1,4 +1,9 @@
 
+%%% regole create per permettere ai metodi di modificare la BC runtime
+%:- dynamic def_class/3.
+:- dynamic class/1.
+:- dynamic slot_value_in_class/3.
+
 %%% valori di default per evitare errori sulle count
 class([]). %% aggiunto per il caso in cui parents sia vuoto
 class(defaultCatchCountError).
@@ -33,7 +38,7 @@ def_class(ClassName, Parents, SlotValues) :-
     existSuperClasses(Parents),
     assertz(class(ClassName)),
     defSuperClasses(ClassName, Parents),
-    defClassSlots(ClassName, SlotValues).
+    defClassSlotT(ClassName, SlotValues).
 
 
 % def_class/3 in caso di cut: restituisce errore
@@ -43,10 +48,14 @@ def_class(ClassName, _, _) :-
     write(" e' una classe gia' defiNita."),
     fail.
 
-%%% metodo per creaare istanze di slot_value_in_class
+
+%%% defClassSlotT/2
+%%% metodo per creare istanze di slot_value_in_class
+%%% che splitta i valori, rimuove gli = e istanzia gli attributi
 defClassSlotT(ClassName, SlotValues) :-
     split_values(SlotValues, X),
-    defClassSlots(ClassName, X).
+    remove_equals(X, _, Out),
+    defClassSlots(ClassName, Out).
 
 
 % defSuperClasses/2: definisce le superclassi di una classe
@@ -101,6 +110,7 @@ remove_equals([X, Y, Z|T], L, W):-
     append(L, X1, W).
 
 
+
 %list_methods/2: estrae tutti i metodi dalla lista splittata
 %Input: [saluta, method([], saluta(salve)), anni, 20, nome, lele]
 %Result: X = [method([], saluta(salve))]
@@ -134,7 +144,7 @@ new(InstanceName, ClassName, SlotValues) :- %slotValues DA FARE!
     CountClasses is 1, !,
     % controllo che non siano presenti istanze omonime
     countInstances(InstanceName, CountInstances),
-    CountInstances is 0, !,
+    CountInstances is 0, !,c
     % creo l'istanza
     assertz(instance_of(InstanceName, ClassName)),
     % assegno attributi ad istanza
