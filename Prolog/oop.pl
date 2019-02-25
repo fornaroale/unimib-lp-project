@@ -1,5 +1,6 @@
 
-% valori di default per evitare errori sulle count
+%%% valori di default per evitare errori sulle count
+class([]). %% aggiunto per il caso in cui parents sia vuoto
 class(defaultCatchCountError).
 superclass(defaultCatchCountError,
            defaultCatchCountError2).
@@ -39,8 +40,13 @@ def_class(ClassName, Parents, SlotValues) :-
 def_class(ClassName, _, _) :-
     write("Errore: "),
     write(ClassName),
-    write(" e' una classe gia' definita."),
+    write(" e' una classe gia' defiNita."),
     fail.
+
+%%% metodo per creaare istanze di slot_value_in_class
+defClassSlotT(ClassName, SlotValues) :-
+    split_values(SlotValues, X),
+    defClassSlots(ClassName, X).
 
 
 % defSuperClasses/2: definisce le superclassi di una classe
@@ -112,9 +118,9 @@ list_methods([], []).
 list_methods([H|T], X):-
     extract_methods(H, Z),
     list_methods(T, Y),
-    append(Y, Z, X).	
-	
-	
+    append(Y, Z, X).
+
+
 % new/2: richiama new/3
 new(InstanceName, ClassName) :-
     new(InstanceName, ClassName, []), !.
