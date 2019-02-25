@@ -115,13 +115,13 @@ remove_equals([X, Y, Z|T], L, W):-
 %Input: [saluta, method([], saluta(salve)), anni, 20, nome, lele]
 %Result: X = [method([], saluta(salve))]
 extract_methods(W, []):-
-   %verifica se non è un predicato
+   %verifica se non e' un predicato
    not((functor(W, method, _))).
 extract_methods(W, [W]):-
-    %verifica se è un predicato "method(..)"
+    %verifica se e' un predicato "method(..)"
     (functor(W, method, _)).
 
-% verifica se è un metodo, se si mi ritorna il metodo come lista,
+% verifica se e' un metodo, se si mi ritorna il metodo come lista,
 % altrimenti mi ritorna una lista vuota, infine fa un append per riunire
 % tutte le liste.
 list_methods([], []).
@@ -136,8 +136,8 @@ new(InstanceName, ClassName) :-
     new(InstanceName, ClassName, []), !.
 
 
-% new/3: aggiunge alla knowledge base l'istanza
-% MANCA: copia attributi classe e parents
+%%% new/3: aggiunge alla knowledge base l'istanza
+%%% MANCA: copia attributi classe e parents
 new(InstanceName, ClassName, SlotValues) :- %slotValues DA FARE!
     % controllo esistenza classe
     countClasses(ClassName, CountClasses),
@@ -157,7 +157,7 @@ new(InstanceName, ClassName, SlotValues) :- %slotValues DA FARE!
     write("' creata con successo").
 
 
-% new/3 in caso di cut: restituisce errore
+%%% new/3 in caso di cut: restituisce errore
 new(InstanceName, ClassName, _) :-
     write("Errore durante creazione istanza '"),
     write(InstanceName),
@@ -167,38 +167,88 @@ new(InstanceName, ClassName, _) :-
     fail.
 
 
-% generateInstanceSlots/2: genera la lista di slot contenente gli
-% attributi della classe e dei parent
+%%% generateInstanceSlots/2: genera la lista di slot contenente gli
+%%% attributi della classe e dei parent
 generateInstanceSlots(ClassName, ParentsValues) :-
-    % estraggo gli attributi dalla classe
+    %% estraggo gli attributi dalla classe
     getClassSlots(ClassName, ClassSlots),
-    % mi assicuro che abbia dei parents
+    %% mi assicuro che abbia dei parents
     hasParents(ClassName, Parents), !,
-    % estraggo gli attributi dai parents
+    %% estraggo gli attributi dai parents
     getParentsSlots(Parents, ParentsSlots),
-    % append tra lista attributi classe e parents
-    append(ParentsSlots, ClassSlots, ParentsValues).
-    % DA FARE: rimuovo duplicati
-    %delDuplicates(ParentsValues)
+    %% append tra lista attributi classe e parents
+    append(ParentsSlots, ClassSlots, AppendList),
+    %% trasformo ParentsValues in FlatSlots, nella forma:
+    %%    [nomeAtt1, valAtt1, nomeAtt2, valAtt2]
+    flatten(AppendList, FlatList),
+    %% rimuovo duplicati
+    findDuplicates(FlatList, ParentsValues).
     % DA FARE: aggiungere attributi utente
     %............
 
 
-% !!! DA FARE:
-% delDuplicates/1: rimuove dalla lista di attributi della classe
-% e dei parenti i doppioni, in modo che rimanga il solo valore della
-% prima definizione di ogni attributo (come da specifiche PDF)
-%delDuplicates([First|Rest]) :-
-%    indexOf(Rest, First, Index), !,
-%    delDuplicates(Rest).
-%
-%delDuplicates
-
-
-% generateInstanceSlots/2 per classe che non ha parents:
+%%% generateInstanceSlots/2 per classe che non ha parents:
 generateInstanceSlots(ClassName, ParentsValues) :-
     % mi limito a ritornare gli attributi della classe
     getClassSlots(ClassName, ParentsValues).
+
+
+%%% ----------------------------------------------------------------------
+%%% CODICE MIO PER ELIMINARE DUPLICATI ATTRIBUTI:
+
+%%% findDuplicates/3: cerca i duplicati per ogni coppia attributo-valore
+%%% e li rimuove dalla lista, resituendo una List priva di duplicati
+findDuplicates([SlotName,SlotValue|T], List) :-
+    %% Toglie un duplicato e lo mette in ListNew
+    delDuplicate(T, SlotName, TNew), !,
+    findDuplicates([SlotName,SlotValue|TNew], List).
+%%% Quando non trova piu' duplicati:
+findDuplicates([SlotName,SlotValue|T], List) :-
+    findDuplicates(T, [SlotName, SlotValue | List]).
+findDuplicates([],List) :-
+    write(List).
+
+
+%%% delDuplicates/3: rimuove dalla lista un attributo di nome SlotName
+%%% Se non lo trova, ritorna false
+delDuplicate(ListOld, SlotName, ListNew) :-
+    %% se trovo un duplicato:
+    indexOf(ListOld, SlotName, Index), !,
+    %% cancello name dell'attributo dalla lista
+    delFromList(Index, ListOld, CleanList),
+    %% dopo aver cancellato il name, il value avra' stessa index
+    delFromList(Index, CleanList, ListNew).
+
+%%% ----------------------------------------------------------------------
+
+%%% CODICE LELE PER ELIMINARE DUPLICATI ATTRIBUTI:
+
+provaFFF([SlotName,_SlotValue|T], Lista) :-
+    indexOf(Lista, SlotName, _Index), !,
+    provaFFF(T, Lista).
+
+provaFFF([SlotName,SlotValue|T], Lista) :-
+    append([SlotName], SlotValue, Lista),
+    provaFFF(T, Lista).
+
+%%% ----------------------------------------------------------------------
+
+
+%%% delete/3
+delFromList(0, [_|T], T).
+delFromList(X, [H|T], [H|T2]) :-
+    NuovaX is X-1,
+    delFromList(NuovaX, T, T2).
+
+
+%%% flatten/2: porta i componenti di una lista al 'primo livello'
+flattenList([], []) :- !.
+flattenList([L|Ls], FlatL) :-
+    !,
+    flattenList(L, NewL),
+    flattenList(Ls, NewLs),
+    append(NewL, NewLs, FlatL).
+flattenList(L, [L]).
 
 
 % hasParents/1: controlla se la classe ha parents (altr. false)
@@ -287,17 +337,18 @@ getv(InstanceName, _, _) :-
     fail.
 
 
-
-
-% --------------------------------------------------------
-%  FUNZIONI AL MOMENTO INUTILIZZATE:
-
 % indexOf/3: ritorna posizione di elemento nella lista
 % Se non lo trova, ritorna false!
 indexOf([Element|_], Element, 0):- !.
 indexOf([_|Tail], Element, Index):-
   indexOf(Tail, Element, Index1), !,
   Index is Index1+1.
+
+
+
+
+% --------------------------------------------------------
+%  FUNZIONI AL MOMENTO INUTILIZZATE:
 
 
 % getElementAt/3: ritorna l'elemento che si trova nella
@@ -308,5 +359,6 @@ getElementAt([X|_], N, N, X) :- !.
 getElementAt([_|Xs], T, N, X) :-
     T1 is T+1,
     getElementAt(Xs, T1, N, X).
+
 
 % --------------------------------------------------------
