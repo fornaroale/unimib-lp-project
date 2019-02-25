@@ -1,8 +1,8 @@
 
 %%% regole create per permettere ai metodi di modificare la BC runtime
 %:- dynamic def_class/3.
-:- dynamic class/1.
-:- dynamic slot_value_in_class/3.
+%:- dynamic class/1.
+%:- dynamic slot_value_in_class/3.
 
 %%% valori di default per evitare errori sulle count
 class([]). %% aggiunto per il caso in cui parents sia vuoto
@@ -144,7 +144,7 @@ new(InstanceName, ClassName, SlotValues) :- %slotValues DA FARE!
     CountClasses is 1, !,
     % controllo che non siano presenti istanze omonime
     countInstances(InstanceName, CountInstances),
-    CountInstances is 0, !,c
+    CountInstances is 0, !,
     % creo l'istanza
     assertz(instance_of(InstanceName, ClassName)),
     % assegno attributi ad istanza
