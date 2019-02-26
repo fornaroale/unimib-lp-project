@@ -111,6 +111,25 @@ remove_equals([X, Y, Z|T], L, W):-
 
 
 
+%%% gestione_methods/1
+%%% presa la lista di attributi ne estrae metodo e
+%%% relativo nome e lo istanzia
+gestione_methods([X, Y|T]):-
+    extract_methods(Y, Z),
+    gestione_methods(T),
+    functor(Y, method, _),
+    process_method(X, Z).
+
+gestione_methods([]).
+
+%%% process_methods/2
+%%% preso il nome del metodo e il metodo
+%%% lo inserisce come fatto nella base di conoscenza
+process_method(X, Y) :-
+    Term =.. [X, Y],
+    assert(Term).
+
+
 %list_methods/2: estrae tutti i metodi dalla lista splittata
 %Input: [saluta, method([], saluta(salve)), anni, 20, nome, lele]
 %Result: X = [method([], saluta(salve))]
