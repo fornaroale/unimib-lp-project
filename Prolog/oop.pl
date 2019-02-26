@@ -363,28 +363,29 @@ getvx(InstanceName, [H|T], Result):-
     get_list_values(InstanceName, [H|T], R),
     reverse(R, Result), !.
 
+%%%FUNZIONANTE DA COMMENTARE E PULIRE
 
-%%% DA SISTEMARE
+replace_this(Stringa, Valore, Result) :-
+    %%se fallisce vuol dire che o ho finito o non ho nulla da sostituire
+     replace_singol_this(Stringa, Valore, Out), !,
+     replace_this(Out, Valore, Result).
+     %string_concat(Out, Out2, Result).
+
+replace_this(Stringa, _Valore, Result) :-
+    string_concat(Stringa, "", Result).
+
+replace_singol_this(String, Var, Out) :-
+    sub_string(String, Before, _, After, "this"), !,
+    sub_string(String, 0, Before, _, Out1),
+    Avanti is Before + 4,
+    sub_string(String, Avanti, After, _, Out2),
+    string_concat(Out1, Var, Temp),
+    string_concat(Temp, Out2, Out),
+    write(Out).
+
+%%%%
 
 
-%%%problema, la split_string cerca la t e non this, e sostituisce a tutte le t
-remove_this(X, Var, Result) :-
-    term_string(X, Out),
-   % string_chars(Out, Out2),
-    split_string(Out,'this', 'this', Temp ),
-   % sub_string(Out, Before, _, After, "this"), !,
-    write(Result),
-    concatena(Temp, Var, Result).
-
-concatena([X], _Var, Out):-
-     string_concat(X, "", Out).
-
-concatena([Primo | Lista], Var, Out) :-
-    string_concat(Primo, Var, Temp),
-    concatena(Lista, Var, Out2),
-    string_concat(Temp, Out2, Out).
-
-%%%
 
 
 % --------------------------------------------------------
