@@ -242,6 +242,42 @@ delDuplicate(ListOld, SlotName, ListNew) :-
 
 %%% CODICE LELE PER ELIMINARE DUPLICATI ATTRIBUTI:
 
+
+
+findDuplicatesLele([X, Y],List) :-
+    append([X], [Y], List).
+
+%%% findDuplicates/3: cerca i duplicati per ogni coppia attributo-valore
+%%% e li rimuove dalla lista, resituendo una List priva di duplicati
+findDuplicatesLele([SlotName, SlotValue|T], List) :-
+    %% Toglie un duplicato e lo mette in ListNew
+    remv(SlotName, T, TNew),
+    findDuplicates(TNew, Out),
+    append([SlotName, SlotValue], Out, List).
+
+%%% Quando non trova piu' duplicati:
+%findDuplicates([SlotName,SlotValue|T], List) :-
+%    findDuplicates(T, [SlotName, SlotValue | List]).
+
+
+% Removing anything from an empty list yields an empty list.
+remv(_, [], []).
+
+% If the head is the element we want to remove,
+% do not keep the head and
+% remove the element from the tail to get the new list.
+remv(X, [X, _ |T], T1) :- remv(X, T, T1).
+
+% If the head is NOT the element we want to remove,
+% keep the head and
+% remove the element from the tail to get the new tail.
+remv(X, [H, Y|T], [H, Y|T1]) :-
+    X \= H,
+    remv(X, T, T1).
+
+
+
+
 provaFFF([SlotName,_SlotValue|T], Lista) :-
     indexOf(Lista, SlotName, _Index), !,
     provaFFF(T, Lista).
