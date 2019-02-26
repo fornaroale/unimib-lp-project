@@ -364,6 +364,28 @@ getvx(InstanceName, [H|T], Result):-
     reverse(R, Result), !.
 
 
+%%% DA SISTEMARE
+
+
+%%%problema, la split_string cerca la t e non this, e sostituisce a tutte le t
+remove_this(X, Var, Result) :-
+    term_string(X, Out),
+   % string_chars(Out, Out2),
+    split_string(Out,'this', 'this', Temp ),
+   % sub_string(Out, Before, _, After, "this"), !,
+    write(Result),
+    concatena(Temp, Var, Result).
+
+concatena([X], _Var, Out):-
+     string_concat(X, "", Out).
+
+concatena([Primo | Lista], Var, Out) :-
+    string_concat(Primo, Var, Temp),
+    concatena(Lista, Var, Out2),
+    string_concat(Temp, Out2, Out).
+
+%%%
+
 
 % --------------------------------------------------------
 %  FUNZIONI AL MOMENTO INUTILIZZATE:
