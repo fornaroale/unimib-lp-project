@@ -397,7 +397,62 @@ replace_singol_this(String, Var, Out) :-
     string_concat(Temp, Out2, Out),
     write(Out).
 
-%%%%
+%%% Input: method_in_instance("talk", "getv(this, nome, N)", beppe, X)
+%%% Output: X =  (talk(beppe):-call(getv(beppe, nome, _8632))).
+%%% Aggiorna inoltre la KB, quindi se assert non e' commentato
+%%% ricordarsi di usare:
+%%% listing(talk(X)).
+%%% retractall(talk(X))
+method_in_instance(_NomeIstanza, _NomeMetodo, _CorpoMetodo) :-
+   ! .
+
+method_in_instance1(NomeMetodo, Metodo, NomeIstanza, Rules) :-
+    %%estrae this e inserisce il nome dell'istance -> ritorna una stringa
+    replace_this(Metodo, NomeIstanza, CorpoStr),
+    %%creo sub-stringa: "nomeMetodo(NomeIstanza)"
+    add_argument(NomeMetodo, NomeIstanza, TestaArg),
+    %%creo sub-string: "call(CorpoFunzione)"
+    add_call(CorpoStr, CorpoCall),
+    %%unifico le sub-string per creare la regola (ritorna una stringa)
+    string_comp(TestaArg, " :- ", CorpoCall, Z),
+    %%converto in termine usando, term_string, ma genera il problema dell    %%a variabile anonima
+    term_string(Rules, Z),
+    %%aggiorno la KB.
+    assertz(Rules).
+
+method2_in_instance2(NomeMetodo, Metodo, NomeIstanza, Rules) :- %test errato%
+    replace_this(Metodo, NomeIstanza, CorpoStr),
+    add_call(CorpoStr, CorpoCall),
+    term_string(Nome, NomeMetodo),
+    term_string(Corpo2, CorpoCall),
+    Testa =.. [Nome, NomeIstanza],
+    string_comp(Testa, ":-", Corpo2, Rules).
+%% e' sbagliato
+    %assertz(Rules).
+
+/*add_write(Regola, Result) :-
+    string_comp("write(", Regola, ")", Result).*/
+
+
+add_call(Corpo, Result) :-
+    string_comp("call(", Corpo, ")", Result).
+
+add_argument(NomeMetodo, NomeIstanza, Result) :-
+    string_comp(NomeMetodo, "(", NomeIstanza, X),
+    string_concat(X, ") ", Result).
+
+string_comp(A, B, C, X):-
+   string_concat(A, B, Z),
+   string_concat(Z, C, X).
+
+ %assertz(NomeMetodo(NomeIstanza) :- call(Z)) .
+/*set_rules(NomeMetodo, CorpoMetodo, X) :-
+    X =.. [NomeMetodo, CorpoMetodo].
+
+*/
+
+
+
 
 
 
