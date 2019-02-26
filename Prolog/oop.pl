@@ -242,7 +242,8 @@ delDuplicate(ListOld, SlotName, ListNew) :-
 
 %%% CODICE LELE PER ELIMINARE DUPLICATI ATTRIBUTI:
 
-
+findDuplicatesLele([], List) :-
+    append([],[],List).
 
 findDuplicatesLele([X, Y],List) :-
     append([X], [Y], List).
