@@ -46,7 +46,7 @@ def_class(ClassName, Parents, SlotValues) :-
 def_class(ClassName, _, _) :-
     write("Errore: "),
     write(ClassName),
-    write(" e' una classe gia' defiNita."),
+    write(" e' una classe gia' definita."),
     fail.
 
 
@@ -287,11 +287,25 @@ get_class_slots(ClassName, Slots) :-
 %%% def_instance_slots/2: funzione momentanea per assegnamento
 %%% attributi istanza (mancano attributi di classe e parents)
 def_instance_slots(_, []) :- !.
-def_instance_slots(InstanceName, [X,Y]) :-
-    assertz(slot_value_in_instance(X, Y, InstanceName)).
+def_instance_slots(InstanceName, [X,Y|T]) :-
+    %% se e' un metodo
+    functor(Y, method, _), !,
+    %% chiamo istanziazione metodo
+    method_in_instance(X, Y, InstanceName),
+    %% proseguo con la prossima coppia di valori
+    def_instance_slots(InstanceName, T).
+%%% Se non e' un metodo:
 def_instance_slots(InstanceName, [X,Y|T]) :-
     assertz(slot_value_in_instance(X, Y, InstanceName)),
     def_instance_slots(InstanceName, T).
+
+method_in_instance(X, Y, InstanceName) :-
+    write("Nome "),
+    write(X),
+    write(" - Codice: "),
+    write(Y),
+    write(" - il codice appartiene all'istanza: "),
+    write(InstanceName).
 
 
 %%% scorro_e_sostituisco/3
