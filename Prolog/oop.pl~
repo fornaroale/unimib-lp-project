@@ -348,20 +348,6 @@ getv(InstanceName, _, _) :-
     fail.
 
 
-%%% Struttua istanza/3:
-%%% (instance_of(InstanceName, ClassName))
-%%%slot_value_in_instance(X, Y, InstanceName)). -> X,Y coppia attr-valore
-%%% Non ripeto i controlli di esistenza dell'istanza e degli attributi
-%%% perche' vengono effettuati nella getv.
-get_list_values(_, [], X):-
-    append([], X, X), !.
-get_list_values(InstanceName, [H|T], Result):-
-    getv(InstanceName, H, R),
-    get_list_values(InstanceName, T, X),
-    append(X, R, Result), !.
-getvx(InstanceName, [H|T], Result):-
-    get_list_values(InstanceName, [H|T], R),
-    reverse(R, Result), !.
 
 
 
