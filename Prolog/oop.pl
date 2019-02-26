@@ -479,3 +479,40 @@ get_element_at([_|Xs], T, N, X) :-
 
 
 % --------------------------------------------------------
+
+
+%%% ------------------------------------------------------
+% METODO CHE, DATA IN INPUT UNA LISTA DI METODI, CREA IL
+% CORPO DELLA CALL
+% Input:  ["write(...)", "getv(...)", etc.]
+% Output: "call(write(...)), call(getv(...)), etc."
+% Parametri attesi: ListaMetodi, ListaRisultato
+
+% NOTA: bisogna togliere l'ultima virgola dell'ultima call (con
+% una substring) e aggiungere un punto (con una concat).
+createCalls([H|T], StringRisultato) :-
+    string_comp("call(", H, "),", Ris1),
+    createCalls(T, StringTemp),
+    string_concat(Ris1, StringTemp, StringRisultato).
+createCalls([], "").
+
+
+%%% Tu hai lista iniziale generata da extract_meth
+%%% Input di extract: [saluta, method([], saluta(salve)), anni, 20,
+%%% nome, lele]
+%%% Output di extract: X = [method([], saluta(salve), saluto(ciao))]
+%%% voglio ottenere solo saluta(salve): mi basta prendere il primo el.
+%%% della lista (nota che sono separati da virgola; poi vado sulle due
+%%% posizioni successive
+%%% Output di remove_method_tag: X = [saluta(salve), saluto(ciao)]
+
+remove_method_tag([H|T], Risultato, IsFunction) :-
+    %% se sono su method, lo salto
+    IsFunction > 0, !,
+    term_string(H, HTerm),
+    remove_method_tag(T, List, IsFunction),
+    append(List, HTerm, Risultato).
+remove_method_tag(Lista, Risultato, _) :-
+    remove_method_tag(Lista, Risultato, 1).
+remove_method_tag([],[],_).
+
