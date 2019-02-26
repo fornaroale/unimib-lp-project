@@ -4,6 +4,7 @@
 %:- dynamic class/1.
 %:- dynamic slot_value_in_class/3.
 
+
 %%% valori di default per evitare errori sulle count
 class([]). %% aggiunto per il caso in cui parents sia vuoto
 class(defaultCatchCountError).
@@ -19,29 +20,29 @@ instance_of(defaultCatchCountError,
             defaultCatchCountError2).
 
 
-% conta il numero di classi aventi il nome passato per parametro
-countClasses(ClassName, Count) :-
+%%% conta il numero di classi aventi il nome passato per parametro
+count_classes(ClassName, Count) :-
     findall(ClassName, class(ClassName), Z),
     length(Z, Count).
 
 
-% conta il numero di istanze aventi il nome passato per parametro
-countInstances(InstanceName, Count) :-
+%%% conta il numero di istanze aventi il nome passato per parametro
+count_instances(InstanceName, Count) :-
     findall(InstanceName, instance_of(InstanceName,_), Z),
     length(Z, Count).
 
 
-% def_class/3: definisce classe aggiungendola alla knowledge base
+%%% def_class/3: definisce classe aggiungendola alla knowledge base
 def_class(ClassName, Parents, SlotValues) :-
-    countClasses(ClassName, Count),
+    count_classes(ClassName, Count),
     Count is 0, !,
-    existSuperClasses(Parents),
+    exist_parents(Parents),
     assertz(class(ClassName)),
-    defSuperClasses(ClassName, Parents),
-    defClassSlotT(ClassName, SlotValues).
+    def_super_classes(ClassName, Parents),
+    def_class_slot_T(ClassName, SlotValues).
 
 
-% def_class/3 in caso di cut: restituisce errore
+%%% def_class/3 in caso di cut: restituisce errore
 def_class(ClassName, _, _) :-
     write("Errore: "),
     write(ClassName),
@@ -49,49 +50,51 @@ def_class(ClassName, _, _) :-
     fail.
 
 
-%%% defClassSlotT/2
+%%% def_class_slot_T/2
 %%% metodo per creare istanze di slot_value_in_class
 %%% che splitta i valori, rimuove gli = e istanzia gli attributi
-defClassSlotT(ClassName, SlotValues) :-
+def_class_slot_T(ClassName, SlotValues) :-
     split_values(SlotValues, X),
     remove_equals(X, _, Out),
-    defClassSlots(ClassName, Out).
+    def_class_slots(ClassName, Out).
 
 
-% defSuperClasses/2: definisce le superclassi di una classe
-defSuperClasses(_, []) :- !.
-defSuperClasses(ClassName, [H|T]) :-
-    existClass(ClassName),
-    defSuperClasses(ClassName, T),
+%%% def_super_classes/2: definisce le superclassi di una classe
+def_super_classes(_, []) :- !.
+def_super_classes(ClassName, [H|T]) :-
+    exist_class(ClassName),
+    def_super_classes(ClassName, T),
     assertz(superclass(H, ClassName)).
 
 
-% defClassSlots/2: definisce gli attributi di una classe
-% Nota: se il numero di attributi e' dispari ritorna false
-defClassSlots(_, []) :- !.
-defClassSlots(ClassName, [X,Y]) :-
+%%% def_class_slots/2: definisce gli attributi di una classe
+%%% Nota: se il numero di attributi e' dispari ritorna false
+def_class_slots(_, []) :- !.
+def_class_slots(ClassName, [X,Y]) :-
     assertz(slot_value_in_class(X, Y, ClassName)).
-defClassSlots(ClassName, [X,Y|T]) :-
+def_class_slots(ClassName, [X,Y|T]) :-
     assertz(slot_value_in_class(X, Y, ClassName)),
-    defClassSlots(ClassName, T).
+    def_class_slots(ClassName, T).
 
 
-% existSuperClasses/1: controlla che i parents esistano
-existSuperClasses([]) :- !.
-existSuperClasses([H|T]) :-
-    countClasses(H, Count),
+%%% exist_parents/1: controlla che i parents esistano
+exist_parents([]) :- !.
+exist_parents([H|T]) :-
+    count_classes(H, Count),
     Count > 0, !,
-    existSuperClasses(T).
+    exist_parents(T).
 
 
-% existClass/1: controlla che la classe esista
-existClass(ClassName) :-
-    countClasses(ClassName, Count),
+%%% exist_class/1: controlla che la classe esista
+exist_class(ClassName) :-
+    count_classes(ClassName, Count),
     Count > 0.
 
-% split_values/2: esegue lo split della lista iniziale
-% Input:[nome = 'lele', anni = 20, saluta = method([], saluta(salve))])
-% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, lele]
+
+%%% split_values/2: esegue lo split della lista iniziale
+%%% Input:[nome = 'lele', anni = 20, saluta = method([],
+%%% saluta(salve))]) Output: X = [saluta, method([], saluta(salve)),
+%%% anni, 20, nome, lele]
 split_values([], X) :-
     append([], X, X).
 split_values([H|T], Z):-
@@ -99,16 +102,18 @@ split_values([H|T], Z):-
    split_values(T, X),
    append(X, Y, Z).
 
-%remove_equals/3: rimuove il carattere uguale dalla lista, prendendo in
-% input la lista restituita da split_values.
-% Input: [=, saluta, method([], saluta(salve)), =, anni, 20, =, nome, lele]
-% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, lele]
+
+%%% remove_equals/3: rimuove il carattere uguale dalla lista, prendendo
+%%% in input la lista restituita da split_values.
+%%% Input: [=, saluta, method([], saluta(salve)), =, anni, 20,
+%%%         =, nome, lele]
+%%% Output: X = [saluta, method([], saluta(salve)), anni, 20,
+%%%              nome, lele]
 remove_equals([], X, X).
 remove_equals([X, Y, Z|T], L, W):-
     X = '=',
     remove_equals(T, [Y, Z], X1),
     append(L, X1, W).
-
 
 
 %%% gestione_methods/1
@@ -119,8 +124,8 @@ gestione_methods([X, Y|T]):-
     gestione_methods(T),
     functor(Y, method, _),
     process_method(X, Z).
-
 gestione_methods([]).
+
 
 %%% process_methods/2
 %%% preso il nome del metodo e il metodo
@@ -130,19 +135,20 @@ process_method(X, Y) :-
     assert(Term).
 
 
-%list_methods/2: estrae tutti i metodi dalla lista splittata
-%Input: [saluta, method([], saluta(salve)), anni, 20, nome, lele]
-%Result: X = [method([], saluta(salve))]
+%%% list_methods/2: estrae tutti i metodi dalla lista splittata
+%%% Input: [saluta, method([], saluta(salve)), anni, 20, nome, lele]
+%%% Result: X = [method([], saluta(salve))]
 extract_methods(W, []):-
-   %verifica se non e' un predicato
-   not((functor(W, method, _))).
+    %% verifica se non e' un predicato
+    not((functor(W, method, _))).
 extract_methods(W, [W]):-
-    %verifica se e' un predicato "method(..)"
+    %%verifica se e' un predicato "method(..)"
     (functor(W, method, _)).
 
-% verifica se e' un metodo, se si mi ritorna il metodo come lista,
-% altrimenti mi ritorna una lista vuota, infine fa un append per riunire
-% tutte le liste.
+
+%%% verifica se e' un metodo, se si mi ritorna il metodo come lista,
+%%% altrimenti mi ritorna una lista vuota, infine fa un append per
+%%% riunire tutte le liste.
 list_methods([], []).
 list_methods([H|T], X):-
     extract_methods(H, Z),
@@ -150,25 +156,32 @@ list_methods([H|T], X):-
     append(Y, Z, X).
 
 
-% New/2: Richiama new/3
+%%% New/2: Richiama new/3
 new(InstanceName, ClassName) :-
     new(InstanceName, ClassName, []), !.
 
 
 %%% new/3: aggiunge alla knowledge base l'istanza
-%%% MANCA: copia attributi classe e parents
-new(InstanceName, ClassName, SlotValues) :- %slotValues DA FARE!
-    % controllo esistenza classe
-    countClasses(ClassName, CountClasses),
+new(InstanceName, ClassName, SlotValues) :-
+    %% controllo esistenza classe
+    count_classes(ClassName, CountClasses),
     CountClasses is 1, !,
-    % controllo che non siano presenti istanze omonime
-    countInstances(InstanceName, CountInstances),
+    %% controllo che non siano presenti istanze omonime
+    count_instances(InstanceName, CountInstances),
     CountInstances is 0, !,
-    % creo l'istanza
+    %% creo l'istanza
     assertz(instance_of(InstanceName, ClassName)),
-    % assegno attributi ad istanza
-    defInstanceSlots(InstanceName, SlotValues),
-    % scrivo messaggio di conferma istanziazione
+    %% eredito attributi da parents
+    generate_instance_slots(ClassName, ParentsSlots),
+    %% processo attributi utente
+    split_values(SlotValues, SplitValues),
+    %% rimuovo simbolo '=' da SplitValues
+    remove_equals(SplitValues, _, UserValues),
+    %% aggiungo/sostituisco attributi definiti da utente
+    scorro_e_sostituisco(ParentsSlots, UserValues, Out),
+    %% assegno attributi ad istanza
+    def_instance_slots(InstanceName, Out),
+    %% scrivo messaggio di conferma istanziazione
     write("Istanza '"),
     write(InstanceName),
     write("' di classe '"),
@@ -186,108 +199,51 @@ new(InstanceName, ClassName, _) :-
     fail.
 
 
-%%% generateInstanceSlots/2: genera la lista di slot contenente gli
+%%% generate_instance_slots/2: genera la lista di slot contenente gli
 %%% attributi della classe e dei parent
-generateInstanceSlots(ClassName, ParentsValues) :-
+generate_instance_slots(ClassName, ParentsValues) :-
     %% estraggo gli attributi dalla classe
-    getClassSlots(ClassName, ClassSlots),
+    get_class_slots(ClassName, ClassSlots),
     %% mi assicuro che abbia dei parents
-    hasParents(ClassName, Parents), !,
+    has_parents(ClassName, Parents), !,
     %% estraggo gli attributi dai parents
-    getParentsSlots(Parents, ParentsSlots),
+    get_parents_slots(Parents, ParentsSlots),
     %% append tra lista attributi classe e parents
     append(ParentsSlots, ClassSlots, AppendList),
     %% trasformo ParentsValues in FlatSlots, nella forma:
     %%    [nomeAtt1, valAtt1, nomeAtt2, valAtt2]
-    flatten(AppendList, FlatList),
+    flatten_list(AppendList, FlatList),
     %% rimuovo duplicati
-    findDuplicates(FlatList, ParentsValues).
-    % DA FARE: aggiungere attributi utente
-    %............
+    find_duplicates(FlatList, ParentsValues).
 
 
-%%% generateInstanceSlots/2 per classe che non ha parents:
-generateInstanceSlots(ClassName, ParentsValues) :-
-    % mi limito a ritornare gli attributi della classe
-    getClassSlots(ClassName, ParentsValues).
+%%% generate_instance_slots/2 per classe che non ha parents:
+generate_instance_slots(ClassName, ParentsValues) :-
+    %% mi limito a ritornare gli attributi della classe
+    get_class_slots(ClassName, ClassSlots),
+    %% trasformo ParentsValues in FlatSlots, nella forma:
+    %%    [nomeAtt1, valAtt1, nomeAtt2, valAtt2]
+    flatten_list(ClassSlots, ParentsValues).
 
-
-%%% ----------------------------------------------------------------------
-%%% CODICE MIO PER ELIMINARE DUPLICATI ATTRIBUTI:
-
-%%% findDuplicates/3: cerca i duplicati per ogni coppia attributo-valore
+%%% find_duplicates/3: cerca i duplicati per ogni coppia attributo-valore
 %%% e li rimuove dalla lista, resituendo una List priva di duplicati
-findDuplicates([SlotName,SlotValue|T], List) :-
-    %% Toglie un duplicato e lo mette in ListNew
-    delDuplicate(T, SlotName, TNew), !,
-    findDuplicates([SlotName,SlotValue|TNew], List).
-%%% Quando non trova piu' duplicati:
-findDuplicates([SlotName,SlotValue|T], List) :-
-    findDuplicates(T, [SlotName, SlotValue | List]).
-findDuplicates([],List) :-
-    write(List).
-
-
-%%% delDuplicates/3: rimuove dalla lista un attributo di nome SlotName
-%%% Se non lo trova, ritorna false
-delDuplicate(ListOld, SlotName, ListNew) :-
-    %% se trovo un duplicato:
-    indexOf(ListOld, SlotName, Index), !,
-    %% cancello name dell'attributo dalla lista
-    delFromList(Index, ListOld, CleanList),
-    %% dopo aver cancellato il name, il value avra' stessa index
-    delFromList(Index, CleanList, ListNew).
-
-%%% ----------------------------------------------------------------------
-
-%%% CODICE LELE PER ELIMINARE DUPLICATI ATTRIBUTI:
-
-findDuplicatesLele([], List) :-
+find_duplicates([], List) :-
     append([],[],List).
-
-findDuplicatesLele([X, Y],List) :-
+find_duplicates([X, Y],List) :-
     append([X], [Y], List).
-
-%%% findDuplicates/3: cerca i duplicati per ogni coppia attributo-valore
-%%% e li rimuove dalla lista, resituendo una List priva di duplicati
-findDuplicatesLele([SlotName, SlotValue|T], List) :-
+find_duplicates([SlotName, SlotValue|T], List) :-
     %% Toglie un duplicato e lo mette in ListNew
     remv(SlotName, T, TNew),
-    findDuplicates(TNew, Out),
+    find_duplicates(TNew, Out),
     append([SlotName, SlotValue], Out, List).
 
-%%% Quando non trova piu' duplicati:
-%findDuplicates([SlotName,SlotValue|T], List) :-
-%    findDuplicates(T, [SlotName, SlotValue | List]).
 
-
-% Removing anything from an empty list yields an empty list.
+%%% remv/3: rimuove elemento X dalla lista
 remv(_, [], []).
-
-% If the head is the element we want to remove,
-% do not keep the head and
-% remove the element from the tail to get the new list.
 remv(X, [X, _ |T], T1) :- remv(X, T, T1).
-
-% If the head is NOT the element we want to remove,
-% keep the head and
-% remove the element from the tail to get the new tail.
 remv(X, [H, Y|T], [H, Y|T1]) :-
     X \= H,
     remv(X, T, T1).
-
-
-
-
-provaFFF([SlotName,_SlotValue|T], Lista) :-
-    indexOf(Lista, SlotName, _Index), !,
-    provaFFF(T, Lista).
-
-provaFFF([SlotName,SlotValue|T], Lista) :-
-    append([SlotName], SlotValue, Lista),
-    provaFFF(T, Lista).
-
-%%% ----------------------------------------------------------------------
 
 
 %%% delete/3
@@ -298,44 +254,44 @@ delFromList(X, [H|T], [H|T2]) :-
 
 
 %%% flatten/2: porta i componenti di una lista al 'primo livello'
-flattenList([], []) :- !.
-flattenList([L|Ls], FlatL) :-
+flatten_list([], []) :- !.
+flatten_list([L|Ls], FlatL) :-
     !,
-    flattenList(L, NewL),
-    flattenList(Ls, NewLs),
+    flatten_list(L, NewL),
+    flatten_list(Ls, NewLs),
     append(NewL, NewLs, FlatL).
-flattenList(L, [L]).
+flatten_list(L, [L]).
 
 
-% hasParents/1: controlla se la classe ha parents (altr. false)
-hasParents(ClassName, SuperClasses) :-
+%%% has_parents/1: controlla se la classe ha parents (altr. false)
+has_parents(ClassName, SuperClasses) :-
     findall(SuperClass, superclass(SuperClass, ClassName), SuperClasses),
     length(SuperClasses, Count),
     Count > 0, !.
 
 
-% getParentsSlots/2: ritorna gli attributi dei parent
-getParentsSlots([SuperClass|OtherSC], ParentsSlots) :-
-    generateInstanceSlots(SuperClass, ParentsSlots),
-    getParentsSlots(OtherSC, ParentsSlots).
-getParentsSlots([], _).
+%%% get_parents_slots/2: ritorna gli attributi dei parent
+get_parents_slots([SuperClass|OtherSC], ParentsSlots) :-
+    generate_instance_slots(SuperClass, ParentsSlots),
+    get_parents_slots(OtherSC, ParentsSlots).
+get_parents_slots([], _).
 
 
-% getClassSlots/2: ritorna in una lista gli attributi della classe
-getClassSlots(ClassName, Slots) :-
+%%% get_class_slots/2: ritorna in una lista gli attributi della classe
+get_class_slots(ClassName, Slots) :-
     findall([SlotName, SlotValue],
             slot_value_in_class(SlotName, SlotValue, ClassName),
             Slots).
 
 
-% defInstanceSlots/2: funzione momentanea per assegnamento
-% attributi istanza (mancano attributi di classe e parents)
-defInstanceSlots(_, []) :- !.
-defInstanceSlots(InstanceName, [X,Y]) :-
+%%% def_instance_slots/2: funzione momentanea per assegnamento
+%%% attributi istanza (mancano attributi di classe e parents)
+def_instance_slots(_, []) :- !.
+def_instance_slots(InstanceName, [X,Y]) :-
     assertz(slot_value_in_instance(X, Y, InstanceName)).
-defInstanceSlots(InstanceName, [X,Y|T]) :-
+def_instance_slots(InstanceName, [X,Y|T]) :-
     assertz(slot_value_in_instance(X, Y, InstanceName)),
-    defInstanceSlots(InstanceName, T).
+    def_instance_slots(InstanceName, T).
 
 
 %%% scorro_e_sostituisco/3
@@ -344,6 +300,7 @@ defInstanceSlots(InstanceName, [X,Y|T]) :-
 %%% scorro_e_sostituisco([nome_attibuto_a, valore_a],
 %%% [nome_attributo_a,nuovo_valore_a], Out).
 %%% Out varra' [nome_attributo_a, nuovo_valore_a]
+scorro_e_sostituisco(X, [], X).
 scorro_e_sostituisco(Xds, [Xn, Yn], Out) :-
     sostituisci(Xds, Xn, Yn, Ex),
     append(Ex, [], Out).
@@ -351,7 +308,6 @@ scorro_e_sostituisco(Xds, [Xn, Yn], Out) :-
 scorro_e_sostituisco(Xds, [Xn, Yn | Xns], Out) :-
     sostituisci(Xds, Xn, Yn, Ex),
     scorro_e_sostituisco(Ex, Xns, Out).
-
 
 
 %%% sostituisci/4
@@ -365,19 +321,18 @@ sostituisci([Val1, _ | Xs], Val1, Val2,  [Val1, Val2 | Out]) :-
 sostituisci([X, Y | Xs], Val1, Val2, [X, Y | Out]) :-
     sostituisci(Xs, Val1, Val2, Out).
 
-
 sostituisci([Val1, _Y], Val1, Val2, [Val1, Val2]).
 
 sostituisci([X, Y], _Val1, _Val2, [X, Y]).
 
 
-% getv/3: restituisce valore associato all'attributo
+%%% getv/3: restituisce valore associato all'attributo
 getv(InstanceName, SlotName, Result) :-
-    % verifico esistenza istanza
-    countInstances(InstanceName, Count),
+    %% verifico esistenza istanza
+    count_instances(InstanceName, Count),
     Count is 1, !,
-    % verifico esistenza attributo (altr. ritorna false)
-    % e, nel caso, lo ritorna
+    %% verifico esistenza attributo (altr. ritorna false)
+    %% e, nel caso, lo ritorna
     findall(SlotValues,
             slot_value_in_instance(SlotName,SlotValues,InstanceName),
             Result),
@@ -385,7 +340,7 @@ getv(InstanceName, SlotName, Result) :-
     CountSlot > 0.
 
 
-% getv/3: in caso di cut
+%%% getv/3: in caso di cut
 getv(InstanceName, _, _) :-
     write("Errore: istanza "),
     write(InstanceName),
@@ -393,28 +348,28 @@ getv(InstanceName, _, _) :-
     fail.
 
 
-% indexOf/3: ritorna posizione di elemento nella lista
-% Se non lo trova, ritorna false!
-indexOf([Element|_], Element, 0):- !.
-indexOf([_|Tail], Element, Index):-
-  indexOf(Tail, Element, Index1), !,
-  Index is Index1+1.
-
 
 
 
 % --------------------------------------------------------
 %  FUNZIONI AL MOMENTO INUTILIZZATE:
 
+%%% index_of/3: ritorna posizione di elemento nella lista
+%%% Se non lo trova, ritorna false!
+index_of([Element|_], Element, 0):- !.
+index_of([_|Tail], Element, Index):-
+  index_of(Tail, Element, Index1), !,
+  Index is Index1+1.
 
-% getElementAt/3: ritorna l'elemento che si trova nella
-% posizione specificata nella lista
-getElementAt(Lista, Index, X) :-
-    getElementAt(Lista, 0, Index, X).
-getElementAt([X|_], N, N, X) :- !.
-getElementAt([_|Xs], T, N, X) :-
+
+%%% get_element_at/3: ritorna l'elemento che si trova nella
+%%% posizione specificata nella lista
+get_element_at(Lista, Index, X) :-
+    get_element_at(Lista, 0, Index, X).
+get_element_at([X|_], N, N, X) :- !.
+get_element_at([_|Xs], T, N, X) :-
     T1 is T+1,
-    getElementAt(Xs, T1, N, X).
+    get_element_at(Xs, T1, N, X).
 
 
 % --------------------------------------------------------
