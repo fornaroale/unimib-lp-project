@@ -35,7 +35,6 @@ def_class(ClassName, Parents, SlotValues) :-
     def_super_classes(ClassName, Parents),
     def_class_slot_T(ClassName, SlotValues), !.
 
-
 %%% def_class/3 in caso di cut: restituisce errore
 def_class(ClassName, _, _) :-
     write("Errore: "),
@@ -55,7 +54,6 @@ def_class_slot_T(ClassName, SlotValues) :-
 
 %%% def_super_classes/2: definisce le superclassi di una classe
 def_super_classes(_, []) :- !.
-
 def_super_classes(ClassName, [H|T]) :-
     exist_class(ClassName),
     def_super_classes(ClassName, T),
@@ -65,7 +63,6 @@ def_super_classes(ClassName, [H|T]) :-
 %%% def_class_slots/2: definisce gli attributi di una classe
 %%% Nota: se il numero di attributi e' dispari ritorna false
 def_class_slots(_, []) :- !.
-
 def_class_slots(ClassName, [X,Y]) :-
     assertz(slot_value_in_class(X, Y, ClassName)).
 def_class_slots(ClassName, [X,Y|T]) :-
@@ -75,7 +72,6 @@ def_class_slots(ClassName, [X,Y|T]) :-
 
 %%% exist_parents/1: controlla che i parents esistano
 exist_parents([]) :- !.
-
 exist_parents([H|T]) :-
     count_classes(H, Count),
     Count > 0, !,
@@ -93,7 +89,6 @@ exist_class(ClassName) :-
 %%% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, eva]
 split_values([], X) :-
     append([], X, X).
-
 split_values([H|T], Z):-
    H =.. Y,
    split_values(T, X),
@@ -105,7 +100,6 @@ split_values([H|T], Z):-
 %%% Input: [=, saluta, method([], saluta(salve)), =, anni, 20, =, nome, eva]
 %%% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, eva]
 remove_equals([], X, X).
-
 remove_equals([X, Y, Z|T], L, W):-
     X = '=',
     remove_equals(T, [Y, Z], X1),
@@ -158,10 +152,10 @@ new(InstanceName, ClassName, _) :-
 %%% generate_instance_slots/2: genera la lista di slot contenente gli
 %%% attributi della classe e dei parent
 generate_instance_slots(ClassName, ParentsValues) :-
-    %% estraggo gli attributi dalla classe
-    get_class_slots(ClassName, ClassSlots),
     %% mi assicuro che abbia dei parents
     has_parents(ClassName, Parents), !,
+    %% estraggo gli attributi dalla classe
+    get_class_slots(ClassName, ClassSlots),
     %% estraggo gli attributi dai parents
     get_parents_slots(Parents, ParentsSlots),
     %% append tra lista attributi classe e parents
@@ -176,35 +170,36 @@ generate_instance_slots(ClassName, ParentsValues) :-
 %%% generate_instance_slots/2: utilizzata per classe che non ha parents
 generate_instance_slots(ClassName, ParentsValues) :-
     %% mi limito a ritornare gli attributi della classe
-    get_class_slots(ClassName, ClassSlots),
-    %% trasformo ParentsValues in FlatSlots, nella forma:
-    %%    [nomeAtt1, valAtt1, nomeAtt2, valAtt2]
-    flatten(ClassSlots, ParentsValues).
+    get_class_slots(ClassName, ParentsValues).
+
+
+%%% get_parents_slots/2: ritorna gli attributi dei parent
+get_parents_slots([], []).
+get_parents_slots([SuperClass|OtherSC], ParentsSlots) :-
+    generate_instance_slots(SuperClass, ParentsSlots1),
+    get_parents_slots(OtherSC, ParentsSlots2),
+    append(ParentsSlots1, ParentsSlots2, ParentsSlots).
 
 
 %%% find_duplicates/3: cerca i duplicati per ogni coppia attributo-valore
 %%% e li rimuove dalla lista, resituendo una List priva di duplicati
 find_duplicates([], List) :-
     append([],[],List).
-
 find_duplicates([X, Y],List) :-
     append([X], [Y], List).
-
 find_duplicates([SlotName, SlotValue|T], List) :-
     %% Toglie un duplicato e lo mette in ListNew
-    remv(SlotName, T, TNew),
+    rimuovi(SlotName, T, TNew),
     find_duplicates(TNew, Out),
     append([SlotName, SlotValue], Out, List).
 
 
-%%% remv/3: rimuove elemento X dalla lista
-remv(_, [], []).
-
-remv(X, [X, _ |T], T1) :- remv(X, T, T1).
-
-remv(X, [H, Y|T], [H, Y|T1]) :-
+%%% rimuovi/3: rimuove elemento X dalla lista
+rimuovi(_, [], []).
+rimuovi(X, [X, _ |Rest], Out) :- rimuovi(X, Rest, Out).
+rimuovi(X, [H, Y|Rest], [H, Y|Out]) :-
     X \= H,
-    remv(X, T, T1).
+    rimuovi(X, Rest, Out).
 
 
 %%% scorro_e_sostituisco/3: Metodo che presa una lista come primo parametro ne
@@ -213,11 +208,9 @@ remv(X, [H, Y|T], [H, Y|T1]) :-
 %%% [nome_attributo_a,nuovo_valore_a], Out).
 %%% Out: [nome_attributo_a, nuovo_valore_a]
 scorro_e_sostituisco(X, [], X).
-
 scorro_e_sostituisco(Xds, [Xn, Yn], Out) :-
     sostituisci(Xds, Xn, Yn, Ex),
     append(Ex, [], Out).
-
 scorro_e_sostituisco(Xds, [Xn, Yn | Xns], Out) :-
     sostituisci(Xds, Xn, Yn, Ex),
     scorro_e_sostituisco(Ex, Xns, Out).
@@ -227,15 +220,13 @@ scorro_e_sostituisco(Xds, [Xn, Yn | Xns], Out) :-
 %%% INPUT: sosituisci([nome_attibuto_a, valore_a], nome_attibuto_a,
 %%% nuovo_valore, Out).
 %%% Out :[nome_attibuto_a, nuovo_valore]
+sostituisci([Val1, _Y], Val1, Val2, [Val1, Val2]).
+sostituisci([X, Y], _Val1, _Val2, [X, Y]).
 sostituisci([Val1, _ | Xs], Val1, Val2,  [Val1, Val2 | Out]) :-
     sostituisci(Xs, Val1, Val2, Out).
-
 sostituisci([X, Y | Xs], Val1, Val2, [X, Y | Out]) :-
     sostituisci(Xs, Val1, Val2, Out).
 
-sostituisci([Val1, _Y], Val1, Val2, [Val1, Val2]).
-
-sostituisci([X, Y], _Val1, _Val2, [X, Y]).
 
 
 %%% getv/3: restituisce valore associato all'attributo
@@ -263,17 +254,15 @@ getv(InstanceName, _, _) :-
 
 %%% has_parents/1: controlla se la classe ha parents (altr. false)
 has_parents(ClassName, SuperClasses) :-
-    findall(SuperClass, superclass(SuperClass, ClassName), SuperClasses),
+    findall(SuperClass, superclass(SuperClass, ClassName), SuperClassesInverse),
+    reverse(SuperClassesInverse, SuperClasses, []),
     length(SuperClasses, Count),
     Count > 0, !.
 
 
-%%% get_parents_slots/2: ritorna gli attributi dei parent
-get_parents_slots([SuperClass|OtherSC], ParentsSlots) :-
-    generate_instance_slots(SuperClass, ParentsSlots),
-    get_parents_slots(OtherSC, ParentsSlots).
-
-get_parents_slots([], _).
+%%% reverse/3: gira al contrario gli elementi di una lista
+reverse([],Z,Z).
+reverse([H|T],Z,Acc) :- reverse(T,Z,[H|Acc]).
 
 
 %%% get_class_slots/2: ritorna in una lista gli attributi della classe
@@ -286,7 +275,6 @@ get_class_slots(ClassName, Slots) :-
 %%% def_instance_slots/2: funzione per l'assegnamento
 %%% degli attributi della istanza
 def_instance_slots(_, []) :- !.
-
 def_instance_slots(InstanceName, [X,Y|T]) :-
     %% se e' un metodo
     functor(Y, method, _), !,
@@ -394,7 +382,6 @@ estrai_resto([_, _ | X], X).
 %%% perche' vengono effettuati nella getv.
 get_list_values(_, [], X):-
     append([], X, X), !.
-
 get_list_values(InstanceName, [H|T], Result):-
     getv(InstanceName, H, R),
     get_list_values(InstanceName, T, X),
@@ -414,8 +401,6 @@ replace_this(Stringa, Valore, Result) :-
     %%se fallisce vuol dire che o ho finito o non ho nulla da sostituire
     replace_singol_this(Stringa, Valore, Out), !,
     replace_this(Out, Valore, Result).
-    %string_concat(Out, Out2, Result).
-
 replace_this(Stringa, _Valore, Result) :-
     string_concat(Stringa, "", Result).
 
