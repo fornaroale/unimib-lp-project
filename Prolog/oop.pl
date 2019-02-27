@@ -516,3 +516,61 @@ remove_method_tag(Lista, Risultato, _) :-
     remove_method_tag(Lista, Risultato, 1).
 remove_method_tag([],[],_).
 
+
+%%% In:[method([], (write('My name is'), getv(this, nome, N),write(N)))]
+%%% Crea una lista del tipo [method, [], (write('My name is'),
+%%% getv(this, nome, N), write(N))] In modo tale da separare gli
+%%% argomenti del metodo da method
+format_list_method([], X) :-
+    append([], X, X).
+format_list_method([H|T], ResultList) :-
+    H =.. L,
+    format_list_method(T, List),
+    append(List, L, ResultList).
+
+%%% Una volta usata la format_list_method, estraiamo gli argomenti del
+%%% method, e' sfruttabile sia per ottenere la lista senza gli argomenti
+%%% che per ottenere gli argomenti
+%%% In:[method, [comesichiama], (write('My name is'), getv(this, nome,
+%%% N), write(N))]
+get_arguments_method([_, Y|T], Y, T):-
+    is_list(Y).
+
+%%% Rimuovo method perchè non è piu' necessario
+%%% [method,  (write('My name is'), getv(this, nome, N), write(N))]
+remove_method_tag([X|T], T):-
+    X = method.
+
+
+%%% Ora con list_to_string posso ottenere la rimozione dellle parentesi
+%%% che contengono il corpo del metodo
+%%% Input: (write('My name is'), getv(this, nome, N), write(N))
+%%% Out:   "write('My name is'), getv(this, nome, N), write(N)"
+%%% Le rimuove in automatico le parentesi
+
+list_to_string([], X) :-
+    append([], X, X).
+list_to_string([H|T], ResultList) :-
+    term_string(H, Str),
+    list_to_string(T, L),
+    append(L, Str, ResultList).
+
+
+/*create_method_list_string([], X) :-
+    append([], X, X).
+create_method_list_string([H|T], Result) :-
+    split_string(H, ",", "", L),
+    create_method_list_string(T, NewL),
+    append(NewL, L, Result).*/
+	
+	
+%%%Input: generate_list_with_new_format([nome = 'lele', anni = 20, talk = method([],(write("My name is "), getv(this, name, N), write(N), nl, write("My age is "), getv(this, age, A), write(A), nl))], X).
+generate_list_with_new_format(ListSlotValueInput, ResultList):-
+    split_values(ListSlotValueInput, R1),
+    remove_equals(R1, _, R2 ),
+    list_methods(R2, R3),
+    format_list_method(R3, R4),
+    get_arguments_method(R4, _, R5),
+    list_to_string(R5, ResultList).
+
+
