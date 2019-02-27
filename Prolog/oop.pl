@@ -1,26 +1,17 @@
+﻿
+%%%% Progetto Linguaggi e Programmazione
+%%%% oop.pl
+%%%% Author: Perego Daniele 829625
+%%%% Author: Fornaro Alessando 830065
+%%%% Author: Leggio Giuseppe 892681
 
-%%% regole create per permettere ai metodi di modificare la BC runtime
-:- dynamic def_class/3.
+%%% regole create per permettere ai metodi di modificare
+%%% la knowledge base runtime
 :- dynamic class/1.
 :- dynamic slot_value_in_class/3.
 :- dynamic slot_value_in_instance/3.
 :- dynamic superclass/2.
 :- dynamic instance_of/2.
-
-
-%%% valori di default per evitare errori sulle count
-class([]). %% aggiunto per il caso in cui parents sia vuoto
-class(defaultCatchCountError).
-superclass(defaultCatchCountError,
-           defaultCatchCountError2).
-slot_value_in_class(defaultCatchCountError,
-                    defaultCatchCountError2,
-                    defaultCatchCountError3).
-slot_value_in_instance(defaultCatchCountError,
-                       defaultCatchCountError2,
-                       defaultCatchCountError3).
-instance_of(defaultCatchCountError,
-            defaultCatchCountError2).
 
 
 %%% conta il numero di classi aventi il nome passato per parametro
@@ -42,7 +33,7 @@ def_class(ClassName, Parents, SlotValues) :-
     exist_parents(Parents),
     assertz(class(ClassName)),
     def_super_classes(ClassName, Parents),
-    def_class_slot_T(ClassName, SlotValues).
+    def_class_slot_T(ClassName, SlotValues), !.
 
 
 %%% def_class/3 in caso di cut: restituisce errore
@@ -95,9 +86,8 @@ exist_class(ClassName) :-
 
 
 %%% split_values/2: esegue lo split della lista iniziale
-%%% Input:[nome = 'lele', anni = 20, saluta = method([],
-%%% saluta(salve))]) Output: X = [saluta, method([], saluta(salve)),
-%%% anni, 20, nome, lele]
+%%% Input:[nome = 'eva', anni = 20, saluta = method([], saluta(salve))])
+%%% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, eva]
 split_values([], X) :-
     append([], X, X).
 split_values([H|T], Z):-
@@ -108,55 +98,13 @@ split_values([H|T], Z):-
 
 %%% remove_equals/3: rimuove il carattere uguale dalla lista, prendendo
 %%% in input la lista restituita da split_values.
-%%% Input: [=, saluta, method([], saluta(salve)), =, anni, 20,
-%%%         =, nome, lele]
-%%% Output: X = [saluta, method([], saluta(salve)), anni, 20,
-%%%              nome, lele]
+%%% Input: [=, saluta, method([], saluta(salve)), =, anni, 20, =, nome, eva]
+%%% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, eva]
 remove_equals([], X, X).
 remove_equals([X, Y, Z|T], L, W):-
     X = '=',
     remove_equals(T, [Y, Z], X1),
     append(L, X1, W).
-
-
-%%% gestione_methods/1
-%%% presa la lista di attributi ne estrae metodo e
-%%% relativo nome e lo istanzia
-gestione_methods([X, Y|T]):-
-    extract_methods(Y, Z),
-    gestione_methods(T),
-    functor(Y, method, _),
-    process_method(X, Z).
-gestione_methods([]).
-
-
-%%% process_methods/2
-%%% preso il nome del metodo e il metodo
-%%% lo inserisce come fatto nella base di conoscenza
-process_method(X, Y) :-
-    Term =.. [X, Y],
-    assert(Term).
-
-
-%%% list_methods/2: estrae tutti i metodi dalla lista splittata
-%%% Input: [saluta, method([], saluta(salve)), anni, 20, nome, lele]
-%%% Result: X = [method([], saluta(salve))]
-extract_methods(W, []):-
-    %% verifica se non e' un predicato
-    (functor(W, method, _)), !.
-extract_methods(W, [W]):-
-    %%verifica se e' un predicato "method(..)"
-    (functor(W, method, _)).
-
-
-%%% verifica se e' un metodo, se si mi ritorna il metodo come lista,
-%%% altrimenti mi ritorna una lista vuota, infine fa un append per
-%%% riunire tutte le liste.
-list_methods([], []).
-list_methods([H|T], X):-
-    extract_methods(H, Z),
-    list_methods(T, Y),
-    append(Y, Z, X).
 
 
 %%% New/2: Richiama new/3
@@ -189,7 +137,7 @@ new(InstanceName, ClassName, SlotValues) :-
     write(InstanceName),
     write("' di classe '"),
     write(ClassName),
-    write("' creata con successo").
+    write("' creata con successo"), !.
 
 
 %%% new/3 in caso di cut: restituisce errore
@@ -220,7 +168,7 @@ generate_instance_slots(ClassName, ParentsValues) :-
     find_duplicates(FlatList, ParentsValues).
 
 
-%%% generate_instance_slots/2 per classe che non ha parents:
+%%% generate_instance_slots/2: utilizzata per classe che non ha parents
 generate_instance_slots(ClassName, ParentsValues) :-
     %% mi limito a ritornare gli attributi della classe
     get_class_slots(ClassName, ClassSlots),
@@ -228,12 +176,15 @@ generate_instance_slots(ClassName, ParentsValues) :-
     %%    [nomeAtt1, valAtt1, nomeAtt2, valAtt2]
     flatten(ClassSlots, ParentsValues).
 
+
 %%% find_duplicates/3: cerca i duplicati per ogni coppia attributo-valore
 %%% e li rimuove dalla lista, resituendo una List priva di duplicati
 find_duplicates([], List) :-
     append([],[],List).
+
 find_duplicates([X, Y],List) :-
     append([X], [Y], List).
+
 find_duplicates([SlotName, SlotValue|T], List) :-
     %% Toglie un duplicato e lo mette in ListNew
     remv(SlotName, T, TNew),
@@ -243,19 +194,21 @@ find_duplicates([SlotName, SlotValue|T], List) :-
 
 %%% remv/3: rimuove elemento X dalla lista
 remv(_, [], []).
+
 remv(X, [X, _ |T], T1) :- remv(X, T, T1).
+
 remv(X, [H, Y|T], [H, Y|T1]) :-
     X \= H,
     remv(X, T, T1).
 
 
-%%% scorro_e_sostituisco/3
-%%% Metodo che presa una lista come primo parametro ne
-%%% sostituisce i valori, lista nella forma
-%%% scorro_e_sostituisco([nome_attibuto_a, valore_a],
+%%% scorro_e_sostituisco/3: Metodo che presa una lista come primo parametro ne
+%%% sostituisce i valori
+%%% INPUT TYPE: scorro_e_sostituisco([nome_attibuto_a, valore_a],
 %%% [nome_attributo_a,nuovo_valore_a], Out).
-%%% Out varra' [nome_attributo_a, nuovo_valore_a]
+%%% Out: [nome_attributo_a, nuovo_valore_a]
 scorro_e_sostituisco(X, [], X).
+
 scorro_e_sostituisco(Xds, [Xn, Yn], Out) :-
     sostituisci(Xds, Xn, Yn, Ex),
     append(Ex, [], Out).
@@ -265,11 +218,10 @@ scorro_e_sostituisco(Xds, [Xn, Yn | Xns], Out) :-
     scorro_e_sostituisco(Ex, Xns, Out).
 
 
-%%% sostituisci/4
-%%% usato in scorro_e_sostituisco
-%%% sosituisci([nome_attibuto_a, valore_a], nome_attibuto_a,
+%%% sostituisci/4: usato in scorro_e_sostituisco
+%%% INPUT: sosituisci([nome_attibuto_a, valore_a], nome_attibuto_a,
 %%% nuovo_valore, Out).
-%%% Out varra' [nome_attibuto_a, nuovo_valore]
+%%% Out :[nome_attibuto_a, nuovo_valore]
 sostituisci([Val1, _ | Xs], Val1, Val2,  [Val1, Val2 | Out]) :-
     sostituisci(Xs, Val1, Val2, Out).
 
@@ -325,9 +277,10 @@ get_class_slots(ClassName, Slots) :-
             Slots).
 
 
-%%% def_instance_slots/2: funzione momentanea per assegnamento
-%%% attributi istanza (mancano attributi di classe e parents)
+%%% def_instance_slots/2: funzione per l'assegnamento
+%%% degli attributi della istanza
 def_instance_slots(_, []) :- !.
+
 def_instance_slots(InstanceName, [X,Y|T]) :-
     %% se e' un metodo
     functor(Y, method, _), !,
@@ -335,64 +288,73 @@ def_instance_slots(InstanceName, [X,Y|T]) :-
     method_in_instance(X, Y, InstanceName),
     %% proseguo con la prossima coppia di valori
     def_instance_slots(InstanceName, T).
+
 %%% Se non e' un metodo:
 def_instance_slots(InstanceName, [X,Y|T]) :-
     assertz(slot_value_in_instance(X, Y, InstanceName)),
     def_instance_slots(InstanceName, T).
 
 
-%%% method_in_instance/3: ???
+%%% method_in_instance/3: metodo utilizzaato per processare ed inserire nella
+%%% BC i metodi costruiti correttamente e con le this sostituite con
+%%% il nome della istanza che la richiama
 method_in_instance(NomeMetodo, CorpoMetodo, InstanceName) :-
-    %%X una lista dove come secondo argomento ho una lista con tutti gli attributi
+    %% trasformo in stringa per richiamare la funzione che processa la this
     term_string(CorpoMetodo, StrConThis),
     term_string(InstanceName, ValDaSostituire),
     replace_this(StrConThis, ValDaSostituire, Result),
     term_string(Y, Result),
     Y =.. X,
-    %% sono costretto a lavorare sulle stringhe per poter
-    %% aggiungere un numero indefinito di variabili
+    %% lavoro sulle stringhe per aggiungere un numero indefinito di variabili
     estrai_secondo(X, Parametri),
+    %% aggiunge tutte le eventuali variabili
     aggiungi_variabili(InstanceName, Parametri, OutVariabili),
-    Metodo =.. [NomeMetodo, OutVariabili],
-    term_string(Metodo, Stringa),
+    Testa =.. [NomeMetodo, OutVariabili],
+    term_string(Testa, Stringa),
     elimina_quadre(Stringa, TestaInStringa),
-   % term_string(OutTesta, MetodoF),
     %% ora devo creare il corpo
-    estrai_resto(X, CorpoInStringa), % corpo sar� una stringa
-    %% poi il corpo va trasformato da stringa a termine
+    estrai_resto(X, CorpoInStringa),% corpo ritornato come una stringa
     costruisci_corpo(CorpoInStringa, OutCorpo),
+    %%unisco la testa al corpo aggiungemdo :-
     fondi_testa_corpo(TestaInStringa, OutCorpo, OutMetodoInStringa),
+    %% ritrasformo la stringa in termine
     term_string(MetodoF, OutMetodoInStringa),
-    assertz(MetodoF),
-    write(OutMetodoInStringa), write("---"), write(OutCorpo).
+    %% la inserisco nella BC
+    assertz(MetodoF).
 
+
+%%% fondi_testa_corpo/3: unisce la testa ad un corpo aggiungendo :-nel mezzo
 fondi_testa_corpo(Testa, Corpo, Out) :-
     string_concat(" :- ", Corpo,Out1),
     string_concat(Testa, Out1, Out).
 
+
+%%% costruisci_corpo/2: gli viene passata una lista e richiama
+%%% costruisci_singolo_corpo
 costruisci_corpo([X], Out) :-
-    costruisci_singolo_corpo_punto(X, Out).
+    costruisci_singolo_corpo(X, Out).
 
-costruisci_corpo([X | Rest], Out) :-
-    costruisci_singolo_corpo_virgola(X, Out1),
-    costruisci_corpo(Rest, Out2),
-    string_concat(Out1, Out2, Out).
 
-costruisci_singolo_corpo_virgola(Metodo, Out) :-
-    term_string(Metodo, Out1),
-    string_concat(Out1, ",", Out).
-
-costruisci_singolo_corpo_punto(Metodo, Out) :-
+%%% costruisci_singolo_corpo/2 aggiunge il punto in coda
+costruisci_singolo_corpo(Metodo, Out) :-
     term_string(Metodo, Out1),
     string_concat(Out1, ".", Out).
 
+
+%%% aggiungi_variabili/3 aggiunge eventuali variabili
+%%% usata per costruire la testa della regola
 aggiungi_variabili(InstanceName, X, OutVariabili) :-
    append([InstanceName], X, OutVariabili).
 
+
+%%% elimina_quadre/2: metodo che elimina [], usato nella costruzione della
+%%% testa, per poter ceare correttamente il termine
 elimina_quadre(Stringa, Out) :-
     elimina_quadra_aperta(Stringa, Tp),
     elimina_quadra_chiusa(Tp, Out).
 
+
+%%% elimina_quadra_aperta/3: usato da elimina_quadra
 elimina_quadra_aperta(String, Out) :-
     sub_string(String, Before, _, After, "["), !,
     sub_string(String, 0, Before, _, Out1),
@@ -400,6 +362,8 @@ elimina_quadra_aperta(String, Out) :-
     sub_string(String, Avanti, After, _, Out2),
     string_concat(Out1, Out2, Out).
 
+
+%%% elimina_quadra_chiusa/3: usato da elimina_quadra
 elimina_quadra_chiusa(String, Out) :-
     sub_string(String, Before, _, After, "]"), !,
     sub_string(String, 0, Before, _, Out1),
@@ -407,13 +371,19 @@ elimina_quadra_chiusa(String, Out) :-
     sub_string(String, Avanti, After, _, Out2),
     string_concat(Out1, Out2, Out).
 
+%%% estrai_secondo/2: ritorna il secondo elemento, usato per ritornare
+%%% eventuali parametri del metodo
 estrai_secondo([_ ,X | _], X).
+
+
+%%% estrai_resto/2: tutta una lista privata dei primi due elementi,
+%%% usato per ritornare eventuali parametri del metodo
 estrai_resto([_, _ | X], X).
 
 
 %%% Struttua istanza/3:
 %%% (instance_of(InstanceName, ClassName))
-%%%slot_value_in_instance(X, Y, InstanceName)). -> X,Y coppia attr-valore
+%%% slot_value_in_instance(X, Y, InstanceName)). -> X,Y coppia attr-valore
 %%% Non ripeto i controlli di esistenza dell'istanza e degli attributi
 %%% perche' vengono effettuati nella getv.
 get_list_values(_, [], X):-
@@ -424,10 +394,16 @@ get_list_values(InstanceName, [H|T], Result):-
     get_list_values(InstanceName, T, X),
     append(X, R, Result), !.
 
+
+%%% getvx/3
 getvx(InstanceName, [H|T], Result):-
     get_list_values(InstanceName, [H|T], R),
     reverse(R, Result), !.
 
+
+%%% replace_this/3: usato per rimpiazzare le this in un metodo con il
+%%% nome della istanza che la sta definendo, chiama ricorsivamente
+%%% replace_singol_this
 replace_this(Stringa, Valore, Result) :-
     %%se fallisce vuol dire che o ho finito o non ho nulla da sostituire
     replace_singol_this(Stringa, Valore, Out), !,
@@ -437,12 +413,15 @@ replace_this(Stringa, Valore, Result) :-
 replace_this(Stringa, _Valore, Result) :-
     string_concat(Stringa, "", Result).
 
+
+%%% replace_singol_this/3: usato per rimpiazzare le this in un metodo con il
+%%% nome della istanza che la sta definendo, sostituisce solo il
+%%% primo che incontra
 replace_singol_this(String, Var, Out) :-
     sub_string(String, Before, _, After, "this"), !,
     sub_string(String, 0, Before, _, Out1),
     Avanti is Before + 4,
     sub_string(String, Avanti, After, _, Out2),
     string_concat(Out1, Var, Temp),
-    string_concat(Temp, Out2, Out),
-    write(Out).
+    string_concat(Temp, Out2, Out).
 
