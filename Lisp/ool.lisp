@@ -26,14 +26,15 @@
 ;;; superati i controlli procede a salvare la classe sull'association list
 ;;; richiamando il metodo gestione-attributi che controlla i vari attributi
 (defun def-class (class-name parents &rest slot-value)
-  (cond ((get-class-spec class-name) 
-         (error "~S --> classe gia presente" class-name))
-        ((listp class-name) (error "il nome classe non puo' essere una lista"))
+  (cond ((listp class-name) 
+         (error "il nome classe non puo' essere una lista"))
         ((and (not (null parents)) (atom parents)) 
          (error "~S --> la classe parent deve essere una lista" parents))
         ((and (not (null parents))(not (esistePar parents))) 
          (error "~S --> una o piu classi padre non esiste" parents))
         (T 
+         ;; in questo modo se la classe è gia definita viene riscritta
+         (remhash class-name *classes-specs*) 
          (add-class-spec class-name
                          (list class-name parents 
                                (gestione-attributi slot-value)))	
