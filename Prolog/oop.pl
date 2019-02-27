@@ -1,8 +1,11 @@
 
 %%% regole create per permettere ai metodi di modificare la BC runtime
-%:- dynamic def_class/3.
-%:- dynamic class/1.
-%:- dynamic slot_value_in_class/3.
+:- dynamic def_class/3.
+:- dynamic class/1.
+:- dynamic slot_value_in_class/3.
+:- dynamic slot_value_in_instance/3.
+:- dynamic superclass/2.
+:- dynamic instance_of/2.
 
 
 %%% valori di default per evitare errori sulle count
@@ -299,13 +302,80 @@ def_instance_slots(InstanceName, [X,Y|T]) :-
     assertz(slot_value_in_instance(X, Y, InstanceName)),
     def_instance_slots(InstanceName, T).
 
-method_in_instance(X, Y, InstanceName) :-
-    write("Nome "),
-    write(X),
-    write(" - Codice: "),
-    write(Y),
-    write(" - il codice appartiene all'istanza: "),
-    write(InstanceName).
+
+
+method_in_instance(NomeMetodo, CorpoMetodo, InstanceName) :-
+    %%X una lista dove come secondo argomento ho una lista con tutti gli attributi
+    term_string(CorpoMetodo, StrConThis),
+    term_string(InstanceName, ValDaSostituire),
+    replace_this(StrConThis, ValDaSostituire, Result),
+    term_string(Y, Result),
+    Y =.. X,
+    %% sono costretto a lavorare sulle stringhe per poter
+    %% aggiungere un numero indefinito di variabili
+    estrai_secondo(X, Parametri),
+    aggiungi_variabili(InstanceName, Parametri, OutVariabili),
+    Metodo =.. [NomeMetodo, OutVariabili],
+    term_string(Metodo, Stringa),
+    elimina_quadre(Stringa, TestaInStringa),
+   % term_string(OutTesta, MetodoF),
+    %% ora devo creare il corpo
+    estrai_resto(X, CorpoInStringa), % corpo sarà una stringa
+    %% poi il corpo va trasformato da stringa a termine
+    costruisci_corpo(CorpoInStringa, OutCorpo),
+    fondi_testa_corpo(TestaInStringa, OutCorpo, OutMetodoInStringa),
+    term_string(MetodoF, OutMetodoInStringa),
+    assertz(MetodoF),
+    write(OutMetodoInStringa), write("---"), write(OutCorpo).
+
+fondi_testa_corpo(Testa, Corpo, Out) :-
+    string_concat(" :- ", Corpo,Out1),
+    string_concat(Testa, Out1, Out).
+
+
+costruisci_corpo([X], Out) :-
+    costruisci_singolo_corpo_punto(X, Out).
+
+costruisci_corpo([X | Rest], Out) :-
+    costruisci_singolo_corpo_virgola(X, Out1),
+    costruisci_corpo(Rest, Out2),
+    string_concat(Out1, Out2, Out).
+
+costruisci_singolo_corpo_virgola(Metodo, Out) :-
+    term_string(Metodo, Out1),
+    string_concat(Out1, ",", Out).
+
+costruisci_singolo_corpo_punto(Metodo, Out) :-
+    term_string(Metodo, Out1),
+    string_concat(Out1, ".", Out).
+
+
+
+aggiungi_variabili(InstanceName, X, OutVariabili) :-
+   append([InstanceName], X, OutVariabili).
+
+elimina_quadre(Stringa, Out) :-
+    elimina_quadra_aperta(Stringa, Tp),
+    elimina_quadra_chiusa(Tp, Out).
+
+elimina_quadra_aperta(String, Out) :-
+    sub_string(String, Before, _, After, "["), !,
+    sub_string(String, 0, Before, _, Out1),
+    Avanti is Before + 1,
+    sub_string(String, Avanti, After, _, Out2),
+    string_concat(Out1, Out2, Out).
+
+elimina_quadra_chiusa(String, Out) :-
+    sub_string(String, Before, _, After, "]"), !,
+    sub_string(String, 0, Before, _, Out1),
+    Avanti is Before + 1,
+    sub_string(String, Avanti, After, _, Out2),
+    string_concat(Out1, Out2, Out).
+
+estrai_secondo([_ ,X | _], X).
+estrai_resto([_, _ | X], X).
+
+
 
 
 %%% scorro_e_sostituisco/3
@@ -403,8 +473,6 @@ replace_singol_this(String, Var, Out) :-
 %%% ricordarsi di usare:
 %%% listing(talk(X)).
 %%% retractall(talk(X))
-method_in_instance(_NomeIstanza, _NomeMetodo, _CorpoMetodo) :-
-   ! .
 
 method_in_instance1(NomeMetodo, Metodo, NomeIstanza, Rules) :-
     %%estrae this e inserisce il nome dell'istance -> ritorna una stringa
@@ -562,8 +630,8 @@ create_method_list_string([H|T], Result) :-
     split_string(H, ",", "", L),
     create_method_list_string(T, NewL),
     append(NewL, L, Result).*/
-	
-	
+
+
 %%%Input: generate_list_with_new_format([nome = 'lele', anni = 20, talk = method([],(write("My name is "), getv(this, name, N), write(N), nl, write("My age is "), getv(this, age, A), write(A), nl))], X).
 generate_list_with_new_format(ListSlotValueInput, ResultList):-
     split_values(ListSlotValueInput, R1),
