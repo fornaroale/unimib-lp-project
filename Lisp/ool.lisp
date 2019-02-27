@@ -2,7 +2,7 @@
 ;;;; Progetto Linguaggi e Programmazione
 ;;;; ool.lisp
 ;;;; Author: Perego Daniele 829625
-;;;; Author: Fornaro Alessando 830065
+;;;; Author: Fornaro Alessandro 830065
 ;;;; Author: Leggio Giuseppe 892681
 
 
@@ -33,7 +33,7 @@
         ((and (not (null parents))(not (esistePar parents))) 
          (error "~S --> una o piu classi padre non esiste" parents))
         (T 
-         ;; in questo modo se la classe � gia definita viene riscritta
+         ;; in questo modo se la classe è gia definita viene riscritta
          (remhash class-name *classes-specs*) 
          (add-class-spec class-name
                          (list class-name parents 
@@ -129,7 +129,7 @@
 (defun verifica (temp)
   ;; se il corpo e' una lista e trovo il simbolo del metodo
   ;; allora e' un metodo e lo tratto come tale
-  ;; in caso contrario � un semplice attributo e lo ritorno inalterato
+  ;; in caso contrario ï¿½ un semplice attributo e lo ritorno inalterato
   (cond ((and (listp (car(cdr temp)))
               (equalp '=> (car(car(cdr temp)))))
          (append (list (car temp))
@@ -147,7 +147,7 @@
   (cond
    ;; controllo che la classe esista
    ((get-class-spec class-name) 
-    ;; se esiste andr� a costruire il mio oggetto 
+    ;; se esiste andrï¿½ a costruire il mio oggetto 
     (list 'oolinst
           class-name
           (second (get-class-spec class-name))
@@ -246,7 +246,7 @@
           ;; padri, faccio quindi la append e inserisco l'attributo/metodo
           (T (append instanceList (list slot-name slot-value)))))
    ;; se trovo 'lattributo vuol dire che e' stato gia inserito 
-   ;; e ritorno la lista inalterata, questo perch� si vuole tenere
+   ;; e ritorno la lista inalterata, questo perchï¿½ si vuole tenere
    ;; la prima coppia attributo valore che si incontra
    (t instanceList)))
 
@@ -343,7 +343,7 @@
 ;;;  la medesiam istanza
 (defun getvx (instance &rest slot-name)
   (cond 
-   ;; se slot-name è nullo ritona nil
+   ;; se slot-name Ã¨ nullo ritona nil
    ((null (car slot-name)) nil)
    ((and (equal (length slot-name) 1) (atom (car slot-name))) 
     (getv instance (car slot-name)))
