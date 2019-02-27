@@ -55,6 +55,7 @@ def_class_slot_T(ClassName, SlotValues) :-
 
 %%% def_super_classes/2: definisce le superclassi di una classe
 def_super_classes(_, []) :- !.
+
 def_super_classes(ClassName, [H|T]) :-
     exist_class(ClassName),
     def_super_classes(ClassName, T),
@@ -64,6 +65,7 @@ def_super_classes(ClassName, [H|T]) :-
 %%% def_class_slots/2: definisce gli attributi di una classe
 %%% Nota: se il numero di attributi e' dispari ritorna false
 def_class_slots(_, []) :- !.
+
 def_class_slots(ClassName, [X,Y]) :-
     assertz(slot_value_in_class(X, Y, ClassName)).
 def_class_slots(ClassName, [X,Y|T]) :-
@@ -73,6 +75,7 @@ def_class_slots(ClassName, [X,Y|T]) :-
 
 %%% exist_parents/1: controlla che i parents esistano
 exist_parents([]) :- !.
+
 exist_parents([H|T]) :-
     count_classes(H, Count),
     Count > 0, !,
@@ -90,6 +93,7 @@ exist_class(ClassName) :-
 %%% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, eva]
 split_values([], X) :-
     append([], X, X).
+
 split_values([H|T], Z):-
    H =.. Y,
    split_values(T, X),
@@ -101,6 +105,7 @@ split_values([H|T], Z):-
 %%% Input: [=, saluta, method([], saluta(salve)), =, anni, 20, =, nome, eva]
 %%% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, eva]
 remove_equals([], X, X).
+
 remove_equals([X, Y, Z|T], L, W):-
     X = '=',
     remove_equals(T, [Y, Z], X1),
@@ -267,6 +272,7 @@ has_parents(ClassName, SuperClasses) :-
 get_parents_slots([SuperClass|OtherSC], ParentsSlots) :-
     generate_instance_slots(SuperClass, ParentsSlots),
     get_parents_slots(OtherSC, ParentsSlots).
+
 get_parents_slots([], _).
 
 
@@ -395,7 +401,7 @@ get_list_values(InstanceName, [H|T], Result):-
     append(X, R, Result), !.
 
 
-%%% getvx/3
+%%% getvx/3: richiama getv e funziona come getv ma su piu elementi
 getvx(InstanceName, [H|T], Result):-
     get_list_values(InstanceName, [H|T], R),
     reverse(R, Result), !.
@@ -424,4 +430,40 @@ replace_singol_this(String, Var, Out) :-
     sub_string(String, Avanti, After, _, Out2),
     string_concat(Out1, Var, Temp),
     string_concat(Temp, Out2, Out).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
