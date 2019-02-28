@@ -343,16 +343,20 @@
 ;;;  la medesiam istanza
 (defun getvx (instance &rest slot-name)
   (cond 
-   ;; se slot-name Ã¨ nullo ritona nil
-   ((null (car slot-name)) nil)
-   ((and (equal (length slot-name) 1) (atom (car slot-name))) 
-    (getv instance (car slot-name)))
-   ((and (equal (length slot-name) 1) (listp (car slot-name))) 
-    (append (list (getv instance (car (car slot-name)))) 
-            (getvx instance (rest (car slot-name)))))
-   (t (append (list (getv instance (car slot-name))) 
-              (getvx instance (rest slot-name))))
-   )
-  )
+   ((null (car slot-name)) nil)  
+   ;; se passo un solo elemento eseguo queste istruzioni
+   ((and (eql (length slot-name) 1) 
+         (atom (car slot-name))) 
+    (getv instance (car slot-name))) 
+   ;; in tutti gli altri casi eseguo il resto
+   ((eql (length slot-name) 1) 
+    (cond ((eql (length (car slot-name)) 1) 
+           (getv instance (car(car slot-name))))
+          (T (getvx (getv instance (car (car slot-name))) 
+                    (rest(car slot-name))))))
+   ;; se ce ne sono ancora
+   (t (getvx (getv instance (car slot-name)) 
+             (rest slot-name)))))
+
 
  ;;;; End Of File
