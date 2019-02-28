@@ -390,10 +390,16 @@ get_list_values(InstanceName, [H|T], Result):-
     append(X, R, Result), !.
 
 
-%%% getvx/3: richiama getv e funziona come getv ma su piu elementi
-getvx(InstanceName, [H|T], Result):-
-    get_list_values(InstanceName, [H|T], R),
-    reverse(R, Result), !.
+%%% getvx/3: usata per cercare il valore di un attributo all'interno di
+%%% oggetti annidati
+getvx(InstanceName, [X], Result) :-
+     getv(InstanceName, X, Result), !.
+getvx(InstanceName, [X | Rest], Result) :-
+    getv(InstanceName, X, Out),
+    term_string(Out, Stringa),
+    elimina_quadre(Stringa, Out2),
+    term_string(Termine, Out2),
+    getvx(Termine, Rest, Result), !.
 
 
 %%% replace_this/3: usato per rimpiazzare le this in un metodo con il
