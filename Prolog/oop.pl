@@ -128,10 +128,11 @@ new(InstanceName, ClassName, SlotValues) :-
     %% rimuovo simbolo '=' da SplitValues
     remove_equals(SplitValues, _, UserValues),
     %% aggiungo/sostituisco attributi definiti da utente
-    scorro_e_sostituisco(ParentsSlots, UserValues, Out),
+    flatten(ParentsSlots, ParentsSlotsFlatten),
+    scorro_e_sostituisco(ParentsSlotsFlatten, UserValues, Out),
     %% assegno attributi ad istanza
-    flatten(Out, OutFlatten),
-    def_instance_slots(InstanceName, OutFlatten),
+    %flatten(Out, OutFlatten),
+    def_instance_slots(InstanceName, Out),
     %% scrivo messaggio di conferma istanziazione
     write("Istanza '"),
     write(InstanceName),
