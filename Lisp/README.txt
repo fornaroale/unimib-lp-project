@@ -33,6 +33,26 @@
 
 
 
+- getv/2:
+	Prende in input l'istanza passata, ovvero una lista nella forma (oolinst classe [slot-values]) e il nome dell'attributo.
+	Verifica che sia una lista formata in quel modo, 
+	verifica che slot-name sia un simbolo, richiama il metodo get-slot-value, il quale prende in input l'istanza e l'attributo
+	e ritorna il valore associato se l'attributoesiste, oppure stampa l'errore.
+
+- get-slot-value/2: 
+	Funzione ausiliaria per getv.
+	Estratta la sottolista contenente gli slot-values, sfruttando first e last, tramite la funzione position preleva la posizione 
+	dell'attributo richiesto, la ritorna e poi sfruttando la funzione nth
+	viene ritornato il valore corrispondente all'attributo cercato, richiamata sul valore ritornato da position +1.
+
+- getvx/2:
+	Usata per cercare il valore di un attributo all'interno di oggetti annidati.
+	Prende come input l'istanza e un numero variabile di attributi dell'istanza.
+	Dato che &Rest ritorna una lista di elementi, la funzione verifica i seguenti casi:
+		Se l'attributo passato è nil ritorna nil
+		Se l'attributo passato è un atomo richiama su di esso la getv che ritorna il valore associato all'attributo
+		Nei rimanenti casi, processo la lista ritornata da &rest, su ogni elemento applico la getv e richiamo la getvx con ricorsione doppia sul risultato della getv e sul resto della lista 
+		degli attributi.
 
 
 /*------------------------ VERSIONE VECCHIA:
