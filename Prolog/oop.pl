@@ -130,7 +130,8 @@ new(InstanceName, ClassName, SlotValues) :-
     %% aggiungo/sostituisco attributi definiti da utente
     scorro_e_sostituisco(ParentsSlots, UserValues, Out),
     %% assegno attributi ad istanza
-    def_instance_slots(InstanceName, Out),
+    flatten(Out, OutFlatten),
+    def_instance_slots(InstanceName, OutFlatten),
     %% scrivo messaggio di conferma istanziazione
     write("Istanza '"),
     write(InstanceName),
