@@ -19,10 +19,8 @@
   (gethash name *classes-specs*))
 
 
-
 ;;; definizione del metodo def-class
-;;; inizia controllando che la classe non sia stata gia definita 
-;;; e che tutti gli attributi passati siano validi
+;;; inizia controllando che tutti gli attributi passati siano validi
 ;;; superati i controlli procede a salvare la classe sull'association list
 ;;; richiamando il metodo gestione-attributi che controlla i vari attributi
 (defun def-class (class-name parents &rest slot-value)
@@ -33,7 +31,7 @@
         ((and (not (null parents))(not (esistePar parents))) 
          (error "~S --> una o piu classi padre non esiste" parents))
         (T 
-         ;; in questo modo se la classe è gia definita viene riscritta
+         ;; in questo modo se la classe e' gia definita viene riscritta
          (remhash class-name *classes-specs*) 
          (add-class-spec class-name
                          (list class-name parents 
@@ -89,27 +87,27 @@
 ;;; aggiungendo la this come primo argomento se non e' gia presente
 (defun rewrite-method-code (method-name method-spec)
   (cond ((not (symbolp method-name))    
-         (error "~S --> il metodo non e' costruito correttamente" method-name))
+         (error "~S --> metodo costruito non correttamente" method-name))
         ;; se il primo elemento delle specifiche e' gia una funzione
         ;; la ritorno senza fare altro
         ((functionp method-spec) method-spec)
         ;; altrimenti creo la funzione aggiungendo le this
-        (T
-         (append (list 'lambda
-                       ;; prima verifico se ci sono altri parametri
-                       (cond ((not (null (car method-spec)))
-                              ;; se i parametri del metodo sono una lista
-                              ;; e la this non e' gia presente la aggiungo
-                              ;; e in coda ritorno tutti gli altri parametri
-                              (cond ((and (listp (car method-spec)) 
-                                          (not (equalp 
-                                                'this (car (car method-spec)))))
-                                     (append (list 'this) (car method-spec)))
-                                    (T (car method-spec))))
-                             ;; altrimenti aggiungo solo this
-                             (T  (list 'this))))
+        (t (append (list 'lambda
+                         ;; prima verifico se ci sono altri parametri
+                         (cond ((not (null (car method-spec)))
+                                ;; se i parametri del metodo sono una lista
+                                ;; e la this non e' gia presente la aggiungo
+                                ;; e in coda ritorno tutti gli altri parametri
+                                (cond ((and (listp (car method-spec)) 
+                                            (not 
+                                             (equalp 'this 
+                                                     (car (car method-spec)))))
+                                       (append (list 'this) (car method-spec)))
+                                      (t (car method-spec))))
+                               ;; altrimenti aggiungo solo this
+                               (t  (list 'this))))
                  ;aggiungo in coda a lambda e ai parametri, la funzione
-                 (cdr method-spec)))))
+                   (cdr method-spec)))))
 
 
 
@@ -129,7 +127,7 @@
 (defun verifica (temp)
   ;; se il corpo e' una lista e trovo il simbolo del metodo
   ;; allora e' un metodo e lo tratto come tale
-  ;; in caso contrario ï¿½ un semplice attributo e lo ritorno inalterato
+  ;; in caso contrario sara' un semplice attributo e lo ritorno inalterato
   (cond ((and (listp (car(cdr temp)))
               (equalp '=> (car(car(cdr temp)))))
          (append (list (car temp))
@@ -147,7 +145,7 @@
   (cond
    ;; controllo che la classe esista
    ((get-class-spec class-name) 
-    ;; se esiste andrï¿½ a costruire il mio oggetto 
+    ;; se esiste andro' a costruire il mio oggetto 
     (list 'oolinst
           class-name
           (second (get-class-spec class-name))
@@ -246,7 +244,7 @@
           ;; padri, faccio quindi la append e inserisco l'attributo/metodo
           (T (append instanceList (list slot-name slot-value)))))
    ;; se trovo 'lattributo vuol dire che e' stato gia inserito 
-   ;; e ritorno la lista inalterata, questo perchï¿½ si vuole tenere
+   ;; e ritorno la lista inalterata, questo perche' si vuole tenere
    ;; la prima coppia attributo valore che si incontra
    (t instanceList)))
 
@@ -276,7 +274,8 @@
    ;; modificare solo i valori degli attributi)
    ((and (equal (nth contSlotInstance instanceList) slot-name)
          (not (functionp (nth (+ 1 contSlotInstance) instanceList))))
-    ;; sostituisco il valore default con il valore dell'istanza deciso dall'utente
+    ;; sostituisco il valore default con il valore dell'istanza 
+    ;; deciso dall'utente
     (listReplace instanceList (+ 1 contSlotInstance) slot-value))
    ;; altrimenti proseguo nella ricerca (ammesso che cont < length)
    (T (cond 
@@ -327,9 +326,9 @@
 
 
 ;;; definisco una funzione che recupera l'attributo richiesto
-;;; prende l'elemento alla posizione successiva rispetto al nome dell'attributo, dalla 
-;;; sottolista contenuta nel'instanza in cui sono contenuti tutti gli attributi
-;;; se non lo trova restituisce un errore
+;;; prende l'elemento alla posizione successiva rispetto al nome 
+;;; dell'attributo, dalla sottolista contenuta nel'instanza in cui sono 
+;;; contenuti tutti gli attributi se non lo trova restituisce un errore
 (defun get-slot-value (instance slot-name)
   (cond 
    ((not (null (position slot-name (first (last instance)))))
@@ -339,8 +338,8 @@
 		 
 
 
-;;; funzione per ritornare piu valori di piu attributi riguardanti
-;;;  la medesiam istanza
+;;; funzione per trovare il valore di un attributo 
+;;; all'interno di oggetti annidati
 (defun getvx (instance &rest slot-name)
   (cond 
    ((null (car slot-name)) nil)  

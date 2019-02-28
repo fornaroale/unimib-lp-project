@@ -31,7 +31,28 @@
 	Permette di scorrere la lista di attributi e metodi contenuti nell'istanza e, per ogni metodo, di chiamare la funzione
 	process-method.
 
+- def-class:
+	È una funzione che permette di inserire la definizione di una classe nella tebella hash, chiamta association list.
+	Inizia controllando che che tutti gli attributi passati siano validi, superati i controlli esegue una remash sulla 
+	tabella hash per cancellare eventuali istanze precedenti della classe, in modo da permetterne la ridefinizione, 
+	in seguito procede a salvare la classe sull'association list richiamando il metodo gestione-attributi  su slot-value
+	 e se ce ne sono chiama verificaR che controlla i vari attributi e/o metodi.
 
+- esistePar/1:
+	È una funzione usata dalla def-class per controllare che esistano i parents che si stanno definendo mentre si crea una nuova classe.
+	Passata una lista che dovrebbe contenere eventuali parents la processa ricorsivamente, dove ogni parents viene cercato
+	tramite get-class-spec e se ritornato ritorna T, NIL in caso contrario.
+
+- verificaR/2:
+	È una funzione ricorsiva usata per cercare un metodo, scorre 2 a 2 una lista e verifica se ogni coppia è o meno un 
+	metodo richiamando verifica.
+	Chiamata con 2 elementi, la lista e il numero di elementi nela lista per poterla scorrere ricorsivamente 2 a 2.
+
+- verifica/1: 
+	È una funzione a cui passo una lista di soli 2 elementi, se analizzando il secondo trova il simbolo di metodo => allora
+	richiama la process-method che mediante una chiamata a rewrite-method-code la ricostruisce e ritorna come funzione anonima.
+	Questa viene poi ritornata in questa forma. Se non trova il simbolo di metodo sarà un semplice attributo e ritornato inalterato.
+	
 
 - getv/2:
 	Prende in input l'istanza passata, ovvero una lista nella forma (oolinst classe [slot-values]) e il nome dell'attributo.

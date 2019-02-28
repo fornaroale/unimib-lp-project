@@ -44,7 +44,7 @@ def_class(ClassName, _, _) :-
 
 
 %%% def_class_slot_T/2
-%%% metodo per creare istanze di slot_value_in_class
+%%% predicato usato per creare istanze di slot_value_in_class
 %%% che splitta i valori, rimuove gli = e istanzia gli attributi
 def_class_slot_T(ClassName, SlotValues) :-
     split_values(SlotValues, X),
@@ -203,11 +203,10 @@ rimuovi(X, [H, Y|Rest], [H, Y|Out]) :-
     rimuovi(X, Rest, Out).
 
 
-%%% scorro_e_sostituisco/3: Metodo che presa una lista come primo parametro ne
-%%% sostituisce i valori
-%%% INPUT TYPE: scorro_e_sostituisco([nome_attibuto_a, valore_a],
-%%% [nome_attributo_a,nuovo_valore_a], Out).
-%%% Out: [nome_attributo_a, nuovo_valore_a]
+%%% scorro_e_sostituisco/3: Predicato che presa una lista come primo parametro 
+%%% e una come secondo, percorrendole 2 a 2 come coppia [nome valore],
+%%% sostisuisce all'attributo con lo stesso nome nella prima lista il valore preso
+%%% dalla seconda lista 
 scorro_e_sostituisco(X, [], X).
 scorro_e_sostituisco(Xds, [Xn, Yn], Out) :-
     sostituisci(Xds, Xn, Yn, Ex),
@@ -218,9 +217,6 @@ scorro_e_sostituisco(Xds, [Xn, Yn | Xns], Out) :-
 
 
 %%% sostituisci/4: usato in scorro_e_sostituisco
-%%% INPUT: sosituisci([nome_attibuto_a, valore_a], nome_attibuto_a,
-%%% nuovo_valore, Out).
-%%% Out :[nome_attibuto_a, nuovo_valore]
 sostituisci([Val1, _Y], Val1, Val2, [Val1, Val2]).
 sostituisci([X, Y], _Val1, _Val2, [X, Y]).
 sostituisci([Val1, _ | Xs], Val1, Val2,  [Val1, Val2 | Out]) :-
@@ -290,7 +286,7 @@ def_instance_slots(InstanceName, [X,Y|T]) :-
     def_instance_slots(InstanceName, T).
 
 
-%%% method_in_instance/3: metodo utilizzaato per processare ed inserire nella
+%%% method_in_instance/3: predicato utilizzato per processare ed inserire nella
 %%% BC i metodi costruiti correttamente e con le this sostituite con
 %%% il nome della istanza che la richiama
 method_in_instance(NomeMetodo, CorpoMetodo, InstanceName) :-
@@ -342,7 +338,7 @@ aggiungi_variabili(InstanceName, X, OutVariabili) :-
    append([InstanceName], X, OutVariabili).
 
 
-%%% elimina_quadre/2: metodo che elimina [], usato nella costruzione della
+%%% elimina_quadre/2: predicato che elimina [], usato nella costruzione della
 %%% testa, per poter ceare correttamente il termine
 elimina_quadre(Stringa, Out) :-
     elimina_quadra_aperta(Stringa, Tp),
@@ -375,18 +371,6 @@ estrai_secondo([_ ,X | _], X).
 %%% usato per ritornare eventuali parametri del metodo
 estrai_resto([_, _ | X], X).
 
-
-%%% Struttua istanza/3:
-%%% (instance_of(InstanceName, ClassName))
-%%% slot_value_in_instance(X, Y, InstanceName)). -> X,Y coppia attr-valore
-%%% Non ripeto i controlli di esistenza dell'istanza e degli attributi
-%%% perche' vengono effettuati nella getv.
-get_list_values(_, [], X):-
-    append([], X, X), !.
-get_list_values(InstanceName, [H|T], Result):-
-    getv(InstanceName, H, R),
-    get_list_values(InstanceName, T, X),
-    append(X, R, Result), !.
 
 
 %%% getvx/3: usata per cercare il valore di un attributo all'interno di
