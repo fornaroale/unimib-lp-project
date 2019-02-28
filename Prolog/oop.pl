@@ -127,11 +127,10 @@ new(InstanceName, ClassName, SlotValues) :-
     split_values(SlotValues, SplitValues),
     %% rimuovo simbolo '=' da SplitValues
     remove_equals(SplitValues, _, UserValues),
+	flatten(ParentsSlots, ParentsSlotsFlatten),
     %% aggiungo/sostituisco attributi definiti da utente
-    flatten(ParentsSlots, ParentsSlotsFlatten),
     scorro_e_sostituisco(ParentsSlotsFlatten, UserValues, Out),
     %% assegno attributi ad istanza
-    %flatten(Out, OutFlatten),
     def_instance_slots(InstanceName, Out),
     %% scrivo messaggio di conferma istanziazione
     write("Istanza '"),
@@ -163,7 +162,7 @@ generate_instance_slots(ClassName, ParentsValues) :-
     %% append tra lista attributi classe e parents
     append(ParentsSlots, ClassSlots, AppendList),
     %% trasformo ParentsValues in FlatSlots, nella forma:
-    %%    [nomeAtt1, valAtt1, nomeAtt2, valAtt2]
+    %%    [nomeAtt1, valAtt1, nomeAtt2, valAtt2, ...]
     flatten(AppendList, FlatList),
     %% rimuovo duplicati
     find_duplicates(FlatList, ParentsValues).
@@ -236,7 +235,7 @@ getv(InstanceName, SlotName, Result) :-
     %% verifico esistenza istanza
     count_instances(InstanceName, Count),
     Count is 1, !,
-    %% verifico esistenza attributo (altr. ritorna false)
+    %% verifico esistenza attributo (altrimenti ritorna false)
     %% e, nel caso, lo ritorna
     findall(SlotValues,
             slot_value_in_instance(SlotName,SlotValues,InstanceName),
@@ -254,7 +253,7 @@ getv(InstanceName, _, _) :-
     fail.
 
 
-%%% has_parents/1: controlla se la classe ha parents (altr. false)
+%%% has_parents/1: controlla se la classe ha parents (altrimenti false)
 has_parents(ClassName, SuperClasses) :-
     findall(SuperClass, superclass(SuperClass, ClassName), SuperClassesInverse),
     reverse(SuperClassesInverse, SuperClasses, []),
@@ -311,7 +310,7 @@ method_in_instance(NomeMetodo, CorpoMetodo, InstanceName) :-
     %% ora devo creare il corpo
     estrai_resto(X, CorpoInStringa),% corpo ritornato come una stringa
     costruisci_corpo(CorpoInStringa, OutCorpo),
-    %%unisco la testa al corpo aggiungemdo :-
+    %% unisco la testa al corpo aggiungendo :-
     fondi_testa_corpo(TestaInStringa, OutCorpo, OutMetodoInStringa),
     %% ritrasformo la stringa in termine
     term_string(MetodoF, OutMetodoInStringa),
@@ -319,7 +318,7 @@ method_in_instance(NomeMetodo, CorpoMetodo, InstanceName) :-
     assertz(MetodoF).
 
 
-%%% fondi_testa_corpo/3: unisce la testa ad un corpo aggiungendo :-nel mezzo
+%%% fondi_testa_corpo/3: unisce la testa ad un corpo aggiungendo :- nel mezzo
 fondi_testa_corpo(Testa, Corpo, Out) :-
     string_concat(" :- ", Corpo,Out1),
     string_concat(Testa, Out1, Out).
@@ -413,9 +412,9 @@ replace_this(Stringa, _Valore, Result) :-
     string_concat(Stringa, "", Result).
 
 
-%%% replace_singol_this/3: usato per rimpiazzare le this in un metodo con il
-%%% nome della istanza che la sta definendo, sostituisce solo il
-%%% primo che incontra
+%%% replace_singol_this/3: usato per rimpiazzare le this in un metodo
+%%% con il nome della istanza che la sta definendo, sostituisce solo
+%%% il primo che incontra
 replace_singol_this(String, Var, Out) :-
     sub_string(String, Before, _, After, "this"), !,
     sub_string(String, 0, Before, _, Out1),
