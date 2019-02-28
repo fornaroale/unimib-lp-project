@@ -39,4 +39,28 @@
 	Predicato ausiliario di new. È il predicato che si occupa di sostituire i valori definiti dall'utente a quelli di
 	default delle classi.
 	
+	
+- getv/2:
+	Data un'istanza, restituisce il valore associato all'attributo passato come parametro.
+	Questo predicato verifica l'esistenza dell'istanza richiamando il predicato count_instance che ritorna un intero.
+	Se il valore ritornato è > 0, allora l'istanza esiste e viene richiamato il predicato findall per trovare 
+	il valore associato a quell'attributo. Per controllare l'esistenza dell'attributo alla fine viene richiamato
+	il predicato length, se ritorna 1 allora l'attributo richiesto esiste altrimenti ritorna false.
+	
+	Nel caso di fallimento al primo controllo viene richiamato l'altro caso per la getv che riceve come 
+	parametri solo l'istanza e 2 variabili anonime e stampa a video i messaggi di errore poichè l'istanza è inesistente.
+	
+
+- count_instance: predicato ausiliario della getv che verifica tramite il predicato findall/3 richiamato sul nome dell'istanza
+	sul predicato instance_of(InstanceName, _), e il terzo parametro e' il valore intero che deve ritornare.
+
+- getvx/3: 
+ 	Usata per cercare il valore di un attributo all'interno di oggetti annidati.
+ 	Con un solo elemento richiama la getv sull'unico elemento per ottenere il valore associato a quell'attributo, viene ritornato il suo valore associato.
+	Con più elementi chiama la getv sul primo elemento.
+ 	Viene richiamato il predicato term_string sul valore ritornato dalla getv, poichè ritorna un risultato in una lista. 
+ 	Usando term_string viene convertita prima in stringa,
+	vengono tolte le quadre con il predicato elimina_quadre, viene richiamato nuovamente 
+ 	term_string per convertirla in un termine e su di esso riapplica
+ 	ricorsivamente la getvx finchè non si arriva al caso base, ossia quando si ha un solo elemento.
 
