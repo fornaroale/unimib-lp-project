@@ -51,7 +51,8 @@
 	E alla fine come parametro di eval richiamo rewrite-method-code.
 
 - rewrite-method-code/2:
-	
+	È una funzione che riscrive un metodo aggiungendo la this come primo argomento delle variabili se non gia presente e la ricostruisce
+	aggiungendo lambda in testa, in modo  da essere trasformata in una funzione anonima quando verra' valutata da eval nella process_method.
 
 - verificaR/2:
 	È una funzione ricorsiva usata per cercare un metodo, scorre 2 a 2 una lista e verifica se ogni coppia è o meno un 
@@ -84,34 +85,3 @@
 		Se l'attributo passato è un atomo richiama su di esso la getv che ritorna il valore associato all'attributo
 		Nei rimanenti casi, processo la lista ritornata da &rest, su ogni elemento applico la getv e richiamo la getvx con ricorsione doppia sul risultato della getv e sul resto della lista 
 		degli attributi.
-
-
-/*------------------------ VERSIONE VECCHIA:
-
-
-
-
- - ool.lisp versione finita e  pronta da consegnare
- - ool-EsecuzioneCorretta.lisp versione finita
- - ool-old.lisp oramai inutile, ma tenuta perchè una delle prime versioni, non funziona correttamente
-
-(defun def-class ( nome parents &rest campi))
-;Verifica se la classe è presente nella classes-list -> richiama get-class-spec
-;se è presente, non l'aggiunge e restituisce il messaggio di errore 
-;se non è presente, aggiunge la classe nella classes-list -> richiama add-class-spec
-;se la lista dei parents non è vuota, bisogna leggere gli attributi delle classi e far si che 
-;la nuova classe erediti gli stessi attributi, ovvero leggere gli attributi dalle classi che 
-;eredita e copiarli nella nuova classe
-
-
-(defun getv (instance campo)) ;instance -> lista campo -> simbolo
-;Verifico che l'istanza esista, se è nil non esiste: (boundp 's)
-	;Se esiste, verifico che esista il campo scorrendo la lista dell'istanza
-		;Se esiste il campo prendo il campo e ritorno il valore
-		;Se non esiste ritorno errore
-	;Se non esiste non ritorno errore
-
-(defun getvx (instance campo))
-;scorro instance e ritorno per ogni elemento di instance e applico getv
-	
-(defun rewrite-method-code

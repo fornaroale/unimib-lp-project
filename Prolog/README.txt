@@ -84,4 +84,3 @@
 	vengono tolte le quadre con il predicato elimina_quadre, viene richiamato nuovamente 
  	term_string per convertirla in un termine e su di esso riapplica
  	ricorsivamente la getvx finchè non si arriva al caso base, ossia quando si ha un solo elemento.
-
