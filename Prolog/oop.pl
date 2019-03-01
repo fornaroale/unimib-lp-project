@@ -14,13 +14,21 @@
 :- dynamic instance_of/2.
 
 
-%%% conta il numero di classi aventi il nome passato per parametro
+%%% count_classes/2: conta il numero di classi aventi il nome passato 
+%%% per parametro
 count_classes(ClassName, Count) :-
     findall(ClassName, class(ClassName), Z),
     length(Z, Count).
 
 
-%%% conta il numero di istanze aventi il nome passato per parametro
+%%% exist_class/1: controlla che la classe esista
+exist_class(ClassName) :-
+    count_classes(ClassName, Count),
+    Count > 0.
+
+
+%%% count_instances/2: conta il numero di istanze aventi il nome passato
+%%% per parametro
 count_instances(InstanceName, Count) :-
     findall(InstanceName, instance_of(InstanceName,_), Z),
     length(Z, Count).
@@ -43,21 +51,12 @@ def_class(ClassName, _, _) :-
     fail.
 
 
-%%% def_class_slot_T/2
-%%% predicato usato per creare istanze di slot_value_in_class
-%%% che splitta i valori, rimuove gli = e istanzia gli attributi
+%%% def_class_slot_T/2: che splitta i valori, rimuove gli = e istanzia 
+%%% gli attributi
 def_class_slot_T(ClassName, SlotValues) :-
     split_values(SlotValues, X),
     remove_equals(X, _, Out),
     def_class_slots(ClassName, Out).
-
-
-%%% def_super_classes/2: definisce le superclassi di una classe
-def_super_classes(_, []) :- !.
-def_super_classes(ClassName, [H|T]) :-
-    exist_class(ClassName),
-    def_super_classes(ClassName, T),
-    assertz(superclass(H, ClassName)).
 
 
 %%% def_class_slots/2: definisce gli attributi di una classe
@@ -70,7 +69,15 @@ def_class_slots(ClassName, [X,Y|T]) :-
     def_class_slots(ClassName, T).
 
 
-%%% exist_parents/1: controlla che i parents esistano
+%%% def_super_classes/2: definisce le superclassi di una classe
+def_super_classes(_, []) :- !.
+def_super_classes(ClassName, [H|T]) :-
+    exist_class(ClassName),
+    def_super_classes(ClassName, T),
+    assertz(superclass(H, ClassName)).
+
+
+%%% exist_parents/1: controlla che i parents di una classe esistano
 exist_parents([]) :- !.
 exist_parents([H|T]) :-
     count_classes(H, Count),
@@ -78,14 +85,8 @@ exist_parents([H|T]) :-
     exist_parents(T).
 
 
-%%% exist_class/1: controlla che la classe esista
-exist_class(ClassName) :-
-    count_classes(ClassName, Count),
-    Count > 0.
-
-
 %%% split_values/2: esegue lo split della lista iniziale
-%%% Input:[nome = 'eva', anni = 20, saluta = method([], saluta(salve))])
+%%% Input: [nome = 'eva', anni = 20, saluta = method([], saluta(salve))])
 %%% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, eva]
 split_values([], X) :-
     append([], X, X).
@@ -95,7 +96,7 @@ split_values([H|T], Z):-
    append(X, Y, Z).
 
 
-%%% remove_equals/3: rimuove il carattere uguale dalla lista, prendendo
+%%% remove_equals/3: rimuove il carattere '=' dalla lista, prendendo
 %%% in input la lista restituita da split_values.
 %%% Input: [=, saluta, method([], saluta(salve)), =, anni, 20, =, nome, eva]
 %%% Output: X = [saluta, method([], saluta(salve)), anni, 20, nome, eva]
@@ -125,10 +126,10 @@ new(InstanceName, ClassName, SlotValues) :-
     generate_instance_slots(ClassName, ParentsSlots),
     %% processo attributi utente
     split_values(SlotValues, SplitValues),
-    %% rimuovo simbolo '=' da SplitValues
+    %% rimuovo simbolo '='
     remove_equals(SplitValues, _, UserValues),
 	flatten(ParentsSlots, ParentsSlotsFlatten),
-    %% aggiungo/sostituisco attributi definiti da utente
+    %% assegno ad attributi classe valori definiti da utente
     scorro_e_sostituisco(ParentsSlotsFlatten, UserValues, Out),
     %% assegno attributi ad istanza
     def_instance_slots(InstanceName, Out),
@@ -161,8 +162,6 @@ generate_instance_slots(ClassName, ParentsValues) :-
     get_parents_slots(Parents, ParentsSlots),
     %% append tra lista attributi classe e parents
     append(ClassSlots, ParentsSlots, AppendList),
-    %% trasformo ParentsValues in FlatSlots, nella forma:
-    %%    [nomeAtt1, valAtt1, nomeAtt2, valAtt2, ...]
     flatten(AppendList, FlatList),
     %% rimuovo duplicati
     find_duplicates(FlatList, ParentsValues).
@@ -182,7 +181,7 @@ get_parents_slots([SuperClass|OtherSC], ParentsSlots) :-
     append(ParentsSlots1, ParentsSlots2, ParentsSlots).
 
 
-%%% find_duplicates/3: cerca i duplicati per ogni coppia attributo-valore
+%%% find_duplicates/2: cerca i duplicati per ogni coppia attributo-valore
 %%% e li rimuove dalla lista, resituendo una List priva di duplicati
 find_duplicates([], List) :-
     append([],[],List).
@@ -203,10 +202,10 @@ rimuovi(X, [H, Y|Rest], [H, Y|Out]) :-
     rimuovi(X, Rest, Out).
 
 
-%%% scorro_e_sostituisco/3: Predicato che presa una lista come primo parametro 
-%%% e una come secondo, percorrendole 2 a 2 come coppia [nome valore],
-%%% sostisuisce all'attributo con lo stesso nome nella prima lista il valore preso
-%%% dalla seconda lista 
+%%% scorro_e_sostituisco/3: presa una lista come primo parametro 
+%%% e una come secondo, percorrendole a 2 a 2 come coppia [nome valore],
+%%% sostituisce all'attributo con lo stesso nome nella prima lista il valore
+%%% preso dalla seconda lista 
 scorro_e_sostituisco(X, [], X).
 scorro_e_sostituisco(Xds, [Xn, Yn], Out) :-
     sostituisci(Xds, Xn, Yn, Ex),
@@ -223,7 +222,6 @@ sostituisci([Val1, _ | Xs], Val1, Val2,  [Val1, Val2 | Out]) :-
     sostituisci(Xs, Val1, Val2, Out).
 sostituisci([X, Y | Xs], Val1, Val2, [X, Y | Out]) :-
     sostituisci(Xs, Val1, Val2, Out).
-
 
 
 %%% getv/3: restituisce valore associato all'attributo
@@ -249,7 +247,7 @@ getv(InstanceName, _, _) :-
     fail.
 
 
-%%% has_parents/1: controlla se la classe ha parents (altrimenti false)
+%%% has_parents/1: controlla se la classe ha superclassi (altrimenti false)
 has_parents(ClassName, SuperClasses) :-
     findall(SuperClass, superclass(SuperClass, ClassName), SuperClassesInverse),
     reverse(SuperClassesInverse, SuperClasses, []),
@@ -269,8 +267,7 @@ get_class_slots(ClassName, Slots) :-
             Slots).
 
 
-%%% def_instance_slots/2: funzione per l'assegnamento
-%%% degli attributi della istanza
+%%% def_instance_slots/2: assegna gli attributi all'istanza
 def_instance_slots(_, []) :- !.
 def_instance_slots(InstanceName, [X,Y|T]) :-
     %% se e' un metodo
@@ -280,14 +277,15 @@ def_instance_slots(InstanceName, [X,Y|T]) :-
     %% proseguo con la prossima coppia di valori
     def_instance_slots(InstanceName, T).
 
-%%% Se non e' un metodo:
+
+%%% def_instance_slots/2: se non e' un metodo:
 def_instance_slots(InstanceName, [X,Y|T]) :-
     assertz(slot_value_in_instance(X, Y, InstanceName)),
     def_instance_slots(InstanceName, T).
 
 
-%%% method_in_instance/3: predicato utilizzato per processare ed inserire nella
-%%% BC i metodi costruiti correttamente e con le this sostituite con
+%%% method_in_instance/3: processa ed inserisce nella knowledge base
+%%% i metodi costruiti correttamente e con le this sostituite con
 %%% il nome della istanza che la richiama
 method_in_instance(NomeMetodo, CorpoMetodo, InstanceName) :-
     %% trasformo in stringa per richiamare la funzione che processa la this
@@ -320,8 +318,7 @@ fondi_testa_corpo(Testa, Corpo, Out) :-
     string_concat(Testa, Out1, Out).
 
 
-%%% costruisci_corpo/2: gli viene passata una lista e richiama
-%%% costruisci_singolo_corpo
+%%% costruisci_corpo/2: richiama costruisci_singolo_corpo
 costruisci_corpo([X], Out) :-
     costruisci_singolo_corpo(X, Out).
 
@@ -362,18 +359,17 @@ elimina_quadra_chiusa(String, Out) :-
     sub_string(String, Avanti, After, _, Out2),
     string_concat(Out1, Out2, Out).
 
-%%% estrai_secondo/2: ritorna il secondo elemento, usato per ritornare
-%%% eventuali parametri del metodo
+
+%%% estrai_secondo/2: ritorna il secondo elemento
 estrai_secondo([_ ,X | _], X).
 
 
-%%% estrai_resto/2: tutta una lista privata dei primi due elementi,
-%%% usato per ritornare eventuali parametri del metodo
+%%% estrai_resto/2: ritorna una lista privata dei primi due elementi
+%%% (usato per ritornare eventuali parametri del metodo)
 estrai_resto([_, _ | X], X).
 
 
-
-%%% getvx/3: usata per cercare il valore di un attributo all'interno di
+%%% getvx/3: usato per cercare il valore di un attributo all'interno di
 %%% oggetti annidati
 getvx(InstanceName, [X], Result) :-
      getv(InstanceName, X, Result), !.
@@ -385,20 +381,18 @@ getvx(InstanceName, [X | Rest], Result) :-
     getvx(Termine, Rest, Result), !.
 
 
-%%% replace_this/3: usato per rimpiazzare le this in un metodo con il
-%%% nome della istanza che la sta definendo, chiama ricorsivamente
-%%% replace_singol_this
+%%% replace_this/3: rimpiazza le "this" presenti in un metodo con il
+%%% nome della istanza che la sta definendo
 replace_this(Stringa, Valore, Result) :-
-    %%se fallisce vuol dire che o ho finito o non ho nulla da sostituire
+    %% se fallisce ho finito, oppure non ho nulla da sostituire
     replace_singol_this(Stringa, Valore, Out), !,
     replace_this(Out, Valore, Result).
 replace_this(Stringa, _Valore, Result) :-
     string_concat(Stringa, "", Result).
 
 
-%%% replace_singol_this/3: usato per rimpiazzare le this in un metodo
-%%% con il nome della istanza che la sta definendo, sostituisce solo
-%%% il primo che incontra
+%%% replace_singol_this/3: rimpiazza la prima "this" che incontra e la
+%%% sostituisce con l'istanza che la sta definendo
 replace_singol_this(String, Var, Out) :-
     sub_string(String, Before, _, After, "this"), !,
     sub_string(String, 0, Before, _, Out1),
@@ -406,40 +400,4 @@ replace_singol_this(String, Var, Out) :-
     sub_string(String, Avanti, After, _, Out2),
     string_concat(Out1, Var, Temp),
     string_concat(Temp, Out2, Out).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

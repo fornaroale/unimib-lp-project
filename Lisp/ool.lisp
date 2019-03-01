@@ -6,18 +6,23 @@
 ;;;; Author: Leggio Giuseppe 892681
 
 
+
 ;;; creazione della association list
 (defparameter *classes-specs* (make-hash-table))
 
 
 
-;;; definizioni metodi getter and setter per l'association list
+;;; aggiunge alla hash-table il contenuto di class-spec
 (defun add-class-spec (name class-spec)
   (setf (gethash name *classes-specs*) class-spec))
 
+  
+
+;;; ritorna il valore dentro la hash-table con chiave name
 (defun get-class-spec (name)
   (gethash name *classes-specs*))
 
+  
 
 ;;; definizione del metodo def-class
 ;;; inizia controllando che tutti gli attributi passati siano validi
@@ -48,10 +53,35 @@
   (cond
    ((not (null slot))(verificaR slot (length slot)))))
 
+   
+  
+;;; definisco una verifica ricorsiva per cercare un metodo che
+;;; scorre 2 a 2 una lista, e verifico ogni coppia chiamando verifica
+(defun verificaR (temp n) 
+  (cond ((equal n 0) nil)
+        (T (append (verifica (subseq temp 0 2))
+                   (verificaR (subseq temp 2 n) (- n 2))))))
 
 
-;;; definizione del metodo che controlla l'esistenza dei parents
-;;; ovvero delle superclassi
+				   
+;;; funzione che, se trova un metodo,
+;;; mediante chiamata a process-method ritorna una funzione anonima
+;;; costruita sulla base sel metodo passato
+(defun verifica (temp)
+  ;; se il corpo e' una lista e trovo il simbolo del metodo
+  ;; allora e' un metodo e lo tratto come tale
+  ;; in caso contrario sara' un semplice attributo e lo ritorno inalterato
+  (cond ((and (listp (car(cdr temp)))
+              (equalp '=> (car(car(cdr temp)))))
+         (append (list (car temp))
+                 (list (process-method
+                        (car temp)
+                        (cdr (car (cdr temp)))))))
+        (T temp)))
+
+
+
+;;; definizione del metodo che controlla l'esistenza delle superclassi
 (defun esistePar (listaP)
   (cond 
    ;; questo primo caso serve quando avviene la chiamata ricorsiva
@@ -68,6 +98,7 @@
            (esistePar (rest listaP))))))
 
 
+		   
 ;;; definizione del metodo che crea la funzione trampolino
 ;;; che costruisco mediante lambda, questa funzione avro' come parametri
 ;;; la this e in piu eventuali altri valori, usati dalla funzione 
@@ -83,6 +114,7 @@
   (eval (rewrite-method-code method-name method-spec)))
 
 
+  
 ;;; definizione del metodo che riscrive un metodo passato 
 ;;; aggiungendo la this come primo argomento se non e' gia presente
 (defun rewrite-method-code (method-name method-spec)
@@ -109,43 +141,15 @@
                  ;aggiungo in coda a lambda e ai parametri, la funzione
                    (cdr method-spec)))))
 
-
-
-;;; definisco una verifica ricorsiva per cercare un metodo
-;;; che  scorre 2 a 2 una lista, e verifico ogni coppia
-;;; chiamando verifica
-(defun verificaR (temp n) 
-  (cond ((equal n 0) nil)
-        (T (append (verifica (subseq temp 0 2))
-                   (verificaR (subseq temp 2 n) (- n 2))))))
-
-
-
-;;; definisco il meodo verifica che se trova un metodo
-;;; mediante chiamata a process-method ritorna una funzione anonima
-;;; costruita sulla base sel metodo passato
-(defun verifica (temp)
-  ;; se il corpo e' una lista e trovo il simbolo del metodo
-  ;; allora e' un metodo e lo tratto come tale
-  ;; in caso contrario sara' un semplice attributo e lo ritorno inalterato
-  (cond ((and (listp (car(cdr temp)))
-              (equalp '=> (car(car(cdr temp)))))
-         (append (list (car temp))
-                 (list (process-method
-                        (car temp)
-                        (cdr (car (cdr temp)))))))
-        (T temp)))
-
-
-
-;;; definisco la funzione new richiamata per istanziare un oggetto
+				   
+				   
+;;; funzione new richiamata per istanziare un oggetto;
 ;;; permette di modificare i valori degli attributi di default
-;;; passandoli dopo la class-name
 (defun new (class-name &rest slot)
   (cond
    ;; controllo che la classe esista
    ((get-class-spec class-name) 
-    ;; se esiste andro' a costruire il mio oggetto 
+    ;; se esiste costruisco l'oggetto 
     (list 'oolinst
           class-name
           (second (get-class-spec class-name))
@@ -161,7 +165,7 @@
 
 
 
-;;; definisco una funzione che copia tutti gli attributi e metodi propri
+;;; funzione che copia tutti gli attributi e metodi propri
 ;;; e delle superclassi da cui eredita
 (defun searchParents (class-name instanceList)
   (cond
@@ -173,17 +177,17 @@
       ;; parents conterra' i parents della classe su cui sto lavorando
       (let ((parents (second (get-class-spec class-name))))
         (cond
-         ;; se ha zero parents 
+         ;; se ha zero parents
          ((null parents)
-          (copySlotsInIstance instanceList
+          (copySlotsInInstance instanceList
                               (car (last (get-class-spec class-name)))
                               0))
          ;; se ha un solo parent ci entro chiamando searchParents
          ;; (questo metodo) copiando gli attributi della classe in cui sono
          ((eql 1 (length parents))
-          (copySlotsInIstance (searchParents 
+          (copySlotsInInstance (searchParents 
                                (first parents) 
-                               (copySlotsInIstance 
+                               (copySlotsInInstance 
                                 instanceList 
                                 (car 
                                  (last (get-class-spec class-name))) 
@@ -193,10 +197,10 @@
          ;; se ho piu' parent richiamo searchParents sul primo e sul 
          ;; resto dei parent, in caso di doppione tengo i valori
          ;; trovati per primi (grazie a copySlotInInstance)
-         (T (copySlotsInIstance (copySlotsInIstance
+         (T (copySlotsInInstance (copySlotsInInstance
                                  (searchParents 
                                   (first parents) 
-                                  (copySlotsInIstance 
+                                  (copySlotsInInstance 
                                    instanceList 
                                    (car (last (get-class-spec class-name))) 
                                    0))
@@ -206,10 +210,10 @@
                                 0)))))
      ;; se class-name e' una lista richiamo searchParents 
      ;; sul primo e sul resto dei parent
-     (T	(copySlotsInIstance (copySlotsInIstance
+     (T	(copySlotsInInstance (copySlotsInInstance
                              (searchParents 
                               (first class-name) 
-                              (copySlotsInIstance 
+                              (copySlotsInInstance 
                                instanceList 
                                (car (last (get-class-spec (first class-name)))) 
                                0))
@@ -220,15 +224,12 @@
 
 
 
-;;; Definisco una funzione che copia attributi e metodi della classe
-;;; genitore in quelli della classe figlio
-(defun copySlotsInIstance (instanceList slot slotCount)
-  ;; se non ho finito di scorerre la lista di attributi continuo
+;;; funzione che copia attributi e metodi della lista slot
+;;; in instanceList qualora non siano gia' presenti
+(defun copySlotsInInstance (instanceList slot slotCount)
+  ;; se non ho finito di scorrere la lista di attributi continuo
   (cond ((< slotCount (length slot))
-         ;; richiamo se stesso sui 2 successivi
-         ;; ma prima richiamo setParValue sulla coppia
-         ;; attributo valore su cui sono ora
-         (copySlotsInIstance 
+         (copySlotsInInstance 
           (setParValue instanceList 
                        (nth slotCount slot) ; attributo
                        (nth (+ 1 slotCount) slot) ; valore attributo
@@ -239,10 +240,10 @@
         (T instanceList)))
 
 
-
-;;; definisco una funzione che verifica se sono gia presenti delle coppie 
-;;; valore attributo definite, se gia presenti le lascia invariate
-;;; altrimenti provvede a copiare i valori in instanceList
+		
+;;; funzione che verifica se sono gia' presenti delle coppie
+;;; attributo-valore definite in instanceList, se gia presenti le lascia
+;;; invariate, altrimenti provvede ad inserirle
 (defun setParValue (instanceList slot-name slot-value contSlotParents)
   (cond 
    ;; se non trova il nome dell'attributo
@@ -257,15 +258,14 @@
           ;; se arrivo qui, significa che lo slot non c'era in eventuali
           ;; padri, faccio quindi la append e inserisco l'attributo/metodo
           (T (append instanceList (list slot-name slot-value)))))
-   ;; se trovo 'lattributo vuol dire che e' stato gia inserito 
-   ;; e ritorno la lista inalterata, questo perche' si vuole tenere
+   ;; se trovo l'attributo vuol dire che e' stato gia inserito 
+   ;; e ritorno la lista inalterata, perche' si vuole tenere
    ;; la prima coppia attributo valore che si incontra
    (t instanceList)))
 
 
 
-;;; definizione di una funzione che scorre una lista passata dall'utente 2 a 2
-;;; che contiene i nuovi valori di alcuni attributi 
+;;; funzione che scorre la lista di attributi della classe 2 a 2;
 ;;; per ogni coppia chiama setInstVal che scorrera' invece la instanceList
 (defun checkSlot (instanceList slot slotCount)
   (cond ((< slotCount (length slot))
@@ -279,8 +279,8 @@
 
 
 
-;;; definizione di una funzione che sostituisce il valore  di default con il 
-;;; valore dell' istanza scorrendo la instanceList 
+;;; funzione che sostituisce il valore di default dell'attributo con il 
+;;; valore definito dall'utente, scorrendo la instanceList 
 (defun setInstVal (instanceList slot-name slot-value contSlotInstance)
   (cond 
    ;; se trovo lo slot con il nome dell'attributo che cerco
@@ -302,7 +302,7 @@
 
 
 
-;;; definizione di una funzione cherichiama process-method su eventuali metodi
+;;; funzione che richiama process-method su eventuali metodi
 ;;; dove slotList e' la lista dell'istanza
 ;;; e slotCount un contatore usato per muoversi nell'istanza
 (defun searchForMethods (slotList slotCount)
@@ -318,7 +318,7 @@
 
 
 
-;;; Funzione per sostituzione n-esimo valore di una lista con 'elem'
+;;; funzione per sostituzione n-esimo valore di una lista con 'elem'
 (defun listReplace (list n elem)
   (cond
    ((null list) ())
@@ -349,7 +349,7 @@
     (nth (+ 1 (position slot-name (first (last instance))))
          (first (last instance))))
    (T (error "~S --> Attributo non presente!" slot-name))))
-		 
+
 
 
 ;;; funzione per trovare il valore di un attributo 
