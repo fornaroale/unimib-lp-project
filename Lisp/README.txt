@@ -43,6 +43,16 @@
 	Passata una lista che dovrebbe contenere eventuali parents la processa ricorsivamente, dove ogni parents viene cercato
 	tramite get-class-spec e se ritornato ritorna T, NIL in caso contrario.
 
+- process-method/2:
+	È una funzione che crea la funzione trampolino che costruisco mediante lambda, questa funzione avro' come parametri la this e 
+	in piu eventuali altri valori, usati dalla funzione che viene richiamata da questa funzione trampolino appena creata, 
+	uso la funzione apply per applicare la funzione trovata mediante una getv con this (che verra' sostituito con l'istanza stessa 
+ 	quando richiamato) e il nome del metodo.
+	E alla fine come parametro di eval richiamo rewrite-method-code.
+
+- rewrite-method-code/2:
+	
+
 - verificaR/2:
 	È una funzione ricorsiva usata per cercare un metodo, scorre 2 a 2 una lista e verifica se ogni coppia è o meno un 
 	metodo richiamando verifica.
@@ -58,7 +68,7 @@
 	Prende in input l'istanza passata, ovvero una lista nella forma (oolinst classe [slot-values]) e il nome dell'attributo.
 	Verifica che sia una lista formata in quel modo, 
 	verifica che slot-name sia un simbolo, richiama il metodo get-slot-value, il quale prende in input l'istanza e l'attributo
-	e ritorna il valore associato se l'attributoesiste, oppure stampa l'errore.
+	e ritorna il valore associato se l'attribut oesiste, oppure stampa l'errore.
 
 - get-slot-value/2: 
 	Funzione ausiliaria per getv.
