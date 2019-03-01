@@ -160,7 +160,7 @@ generate_instance_slots(ClassName, ParentsValues) :-
     %% estraggo gli attributi dai parents
     get_parents_slots(Parents, ParentsSlots),
     %% append tra lista attributi classe e parents
-    append(ParentsSlots, ClassSlots, AppendList),
+    append(ClassSlots, ParentsSlots, AppendList),
     %% trasformo ParentsValues in FlatSlots, nella forma:
     %%    [nomeAtt1, valAtt1, nomeAtt2, valAtt2, ...]
     flatten(AppendList, FlatList),
