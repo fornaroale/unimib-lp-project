@@ -1,9 +1,6 @@
-;;;; -*- Mode: Lisp -*-
-;;;; Progetto Linguaggi e Programmazione
-;;;; ool.lisp
-;;;; Author: Perego Daniele 829625
-;;;; Author: Fornaro Alessandro 830065
-;;;; Author: Leggio Giuseppe 892681
+;;;; Fornaro Alessandro 830065
+;;;; Perego Daniele 829625
+;;;; Leggio Giuseppe 892681
 
 
 
@@ -16,7 +13,7 @@
 (defun add-class-spec (name class-spec)
   (setf (gethash name *classes-specs*) class-spec))
 
-  
+
 
 ;;; ritorna il valore dentro la hash-table con chiave name
 (defun get-class-spec (name)

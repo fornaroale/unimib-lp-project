@@ -1,9 +1,7 @@
-﻿
-%%%% Progetto Linguaggi e Programmazione
-%%%% oop.pl
-%%%% Author: Perego Daniele 829625
-%%%% Author: Fornaro Alessandro 830065
-%%%% Author: Leggio Giuseppe 892681
+﻿%%%% Fornaro Alessandro 830065
+%%%% Perego Daniele 829625
+%%%% Leggio Giuseppe 892681
+
 
 %%% regole create per permettere ai metodi di modificare
 %%% la knowledge base runtime
