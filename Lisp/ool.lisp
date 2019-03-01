@@ -173,32 +173,46 @@
       ;; parents conterra' i parents della classe su cui sto lavorando
       (let ((parents (second (get-class-spec class-name))))
         (cond
-         ;; se ha zero parents, ho raggiunto la cima e copio gli attributi
-         ;; richiamando copySlotsInIstance
+         ;; se ha zero parents 
          ((null parents)
           (copySlotsInIstance instanceList
                               (car (last (get-class-spec class-name)))
                               0))
          ;; se ha un solo parent ci entro chiamando searchParents
-         ;; (questo metodo) e poi copio gli attributi della classe su cui sono
+         ;; (questo metodo) copiando gli attributi della classe in cui sono
          ((eql 1 (length parents))
-          (copySlotsInIstance (searchParents (first parents) instanceList)
+          (copySlotsInIstance (searchParents 
+                               (first parents) 
+                               (copySlotsInIstance 
+                                instanceList 
+                                (car 
+                                 (last (get-class-spec class-name))) 
+                                0))
                               (car (last (get-class-spec class-name)))
                               0))
          ;; se ho piu' parent richiamo searchParents sul primo e sul 
          ;; resto dei parent, in caso di doppione tengo i valori
          ;; trovati per primi (grazie a copySlotInInstance)
          (T (copySlotsInIstance (copySlotsInIstance
-                                 (searchParents (first parents) instanceList)
+                                 (searchParents 
+                                  (first parents) 
+                                  (copySlotsInIstance 
+                                   instanceList 
+                                   (car (last (get-class-spec class-name))) 
+                                   0))
                                  (searchParents (rest parents) instanceList)
                                  0)
                                 (car (last (get-class-spec class-name)))
                                 0)))))
-     ;; se class-name e' una listarichiamo searchParents 
-     ;; sul primo e sul resto dei parent, sostituendo 
-     ;; a mano a mano i risultati
+     ;; se class-name e' una lista richiamo searchParents 
+     ;; sul primo e sul resto dei parent
      (T	(copySlotsInIstance (copySlotsInIstance
-                             (searchParents (first class-name) instanceList)
+                             (searchParents 
+                              (first class-name) 
+                              (copySlotsInIstance 
+                               instanceList 
+                               (car (last (get-class-spec (first class-name)))) 
+                               0))
                              (searchParents (rest class-name) instanceList)
                              0)
                             (car (last (get-class-spec class-name)))
