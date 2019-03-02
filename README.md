@@ -11,9 +11,9 @@ Giuseppe Leggio > https://github.com/LeggioBeppe98
 
 ## Progetto OOΛ - LISP
 
-### Predicati
-* Consentiti: (quasi) tutto quello che è nello standard ANSI, LET, LET*, defparameter SOLO top-level (non nelle funzioni)
-* Vietati: SET, la SETQ e la SETF (a meno che non strettamente necessarie) (nota: l'uso di setf è consentito per modificare gli elementi di una lista); LOOP, DO, DO*, DOTIMES, DOLIST
+### Funzioni
+* Consentite: (quasi) tutte quelle che sono nello standard ANSI; LET; LET*; defparameter SOLO top-level (non nelle funzioni)
+* Vietate: SET, SETQ e SETF (a meno che non strettamente necessarie) (nota: l'uso di setf è consentito per modificare gli elementi di una lista); LOOP, DO, DO*, DOTIMES, DOLIST
 
 ### Caso d'uso
 ```
