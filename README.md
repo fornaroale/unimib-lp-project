@@ -5,7 +5,7 @@ Corso di Linguaggi di Programmazione, AA 2018-2019 - UniMiB
 Costruzione di un'estensione "object oriented" di Common Lisp e di Prolog.
 
 ## Autori
-Alessandro Fornaro > https://github.com/fornaroale/ <br />
+Alessandro Fornaro > https://github.com/fornaroale <br />
 Daniele Perego > https://github.com/Perego98 <br />
 Giuseppe Leggio > https://github.com/LeggioBeppe98
 
