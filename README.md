@@ -29,7 +29,7 @@ Giuseppe Leggio > https://github.com/LeggioBeppe98
 
 (getv testPersonale 'valore)
 (getv testPersonale 'marca)
-talk testPersonale
+(talk testPersonale)
 ```
 Output atteso: 300 - logiDX - sono un mouse fantastico
 
